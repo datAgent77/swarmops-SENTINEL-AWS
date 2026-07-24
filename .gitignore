@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.local
+.DS_Store
+.ruff_cache/
+.pytest_cache/
+*.tar
+*.tar.gz
+dist/
+
+# demo voiceover audio (not needed by judges)
+media/
