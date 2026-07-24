@@ -43,7 +43,13 @@ class PioneerProvider(LLMProvider):
                 {"role": "user", "content": request.user_prompt},
             ],
         }
-        headers = {"Authorization": f"Bearer {self.api_key}", "content-type": "application/json"}
+        # Pioneer authenticates with X-API-Key; also send the OpenAI-style Bearer
+        # token so the drop-in /chat/completions path works either way.
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "X-API-Key": self.api_key,
+            "content-type": "application/json",
+        }
         started = time.perf_counter()
         async with httpx.AsyncClient(timeout=self.timeout_s) as client:
             resp = await client.post(f"{self.base_url}/chat/completions", headers=headers, json=body)

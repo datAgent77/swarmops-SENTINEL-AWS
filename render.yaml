@@ -1,0 +1,37 @@
+# Render blueprint — SwarmOps backend (FastAPI) + managed Postgres.
+#
+# Deploy: Render Dashboard → New → Blueprint → select this repo → Apply.
+# Render creates the Postgres database, wires DATABASE_URL, runs migrations +
+# (idempotent) seed on start, and serves the API. Copy the service's public
+# https URL — the Vercel frontend points NEXT_PUBLIC_API_URL at it.
+#
+# The backend runs entirely on the deterministic Mock LLM provider, so no API
+# keys are needed and the full demo (governance, approvals, evolution, cited.md
+# report) works out of the box. CORS is open ("*") so the Vercel frontend can
+# reach it; tighten to the exact Vercel origin later if you like.
+services:
+  - type: web
+    name: swarmops-api
+    runtime: python
+    plan: free
+    rootDir: apps/api
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swarmops-db
+          property: connectionString
+      - key: LLM_PROVIDER
+        value: mock
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: DEMO_EVENT_DELAY_MS
+        value: "250"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+
+databases:
+  - name: swarmops-db
+    plan: free

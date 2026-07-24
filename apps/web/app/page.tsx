@@ -111,16 +111,26 @@ export default function MissionControl() {
     else if (t.startsWith("agent.version")) playCue("evolve");
   };
 
-  // Evolution is written shortly AFTER completion (paced), so a single fetch can
-  // race ahead of it. Retry until the per-mission summary is populated.
+  // After "completed", two things land shortly after (paced): first the evolution
+  // summary, then the cited.md publish event a beat later. Poll until BOTH are in
+  // so the REPORT/PUBLISHED chip and the mission.published timeline entry are never
+  // missed by stopping the instant the summary appears.
   const pollEvolution = useCallback(async (missionId: string) => {
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    let sawSummary = false;
+    let sawPublish = false;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
       await new Promise((r) => window.setTimeout(r, attempt === 0 ? 500 : 800));
       void fetchEvolution();
       // Pull post-completion events (evolution + cited.md publish) into the timeline.
       try {
         const evRes = await fetch(`${API_URL}/api/missions/${missionId}/events`);
-        if (evRes.ok) ((await evRes.json()) as EventItem[]).forEach(appendEvent);
+        if (evRes.ok) {
+          const items = (await evRes.json()) as EventItem[];
+          items.forEach(appendEvent);
+          if (items.some((e) => e.type === "mission.published" || e.type === "publish.failed")) {
+            sawPublish = true;
+          }
+        }
       } catch {
         /* transient */
       }
@@ -129,11 +139,12 @@ export default function MissionControl() {
         if (res.ok) {
           const s = (await res.json()) as MissionSummary;
           setSummary(s);
-          if (s.top_performer) break; // reports are in — summary populated
+          if (s.top_performer) sawSummary = true;
         }
       } catch {
         /* transient */
       }
+      if (sawSummary && sawPublish) break; // evolution + publish both captured
     }
   }, [fetchEvolution, appendEvent]);
 

@@ -86,6 +86,21 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in text.split(",") if origin.strip()]
         return value
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def _normalize_db_url(cls, value: object) -> object:
+        # Managed Postgres providers (Render, Railway, Heroku) hand out a bare
+        # "postgres://" / "postgresql://" URL. We use the psycopg (v3) driver, so
+        # rewrite the scheme to "postgresql+psycopg://" unless a driver is set.
+        if isinstance(value, str):
+            text = value.strip()
+            if text.startswith("postgres://"):
+                text = "postgresql://" + text[len("postgres://") :]
+            if text.startswith("postgresql://"):
+                text = "postgresql+psycopg://" + text[len("postgresql://") :]
+            return text
+        return value
+
     @property
     def demo_event_delay_seconds(self) -> float:
         return max(0.0, self.demo_event_delay_ms / 1000.0)
