@@ -111,19 +111,24 @@ demo animation.
   `GET /api/missions/{id}/report` returns the grounded Markdown
   (`tests/test_sponsors.py::test_mission_report_is_grounded_and_published`).
 
-## Replay.io — autonomous QA on the dashboard
+## Replay.io — autonomous QA on our live, deployed dashboard
 
-Replay QA is drop-in autonomous QA for web apps ("AI wrote the app, Replay QA finds what broke"). The
-natural fit is to point it at the **SwarmOps dashboard** (`apps/web`, http://localhost:3000) and let it
-explore, find regressions, and generate tests — a genuine "we used the tool on our own app" story, and
-our QA agent thematically mirrors it.
+Replay QA is drop-in autonomous QA for web apps ("AI wrote the app, Replay QA finds what broke"). It
+needs a public URL, so we **deployed the full SwarmOps stack** and pointed Replay QA at the live
+dashboard — a genuine "we ran the tool on our own app" story, made stronger by the fact that our in-app
+QA agent thematically mirrors it.
 
-- **Setup (external, no backend code):**
-  1. Run the app (`make demo`) so the dashboard is live at http://localhost:3000.
-  2. In Replay QA, add the dashboard URL as the target app and start an autonomous QA run.
-  3. Capture the found issues / generated tests as demo evidence.
-- **Optional tie-in:** have the QA agent's "run tests" step link out to the Replay run in the timeline
-  (documentation-level; no core change required).
+- **Live deployment:**
+  - Frontend (Next.js) → **Vercel**: https://swarm-ops-self-evolwing-agents-hack.vercel.app
+  - Backend (FastAPI) + Postgres → **Render** (one-click `render.yaml` blueprint), running on the
+    deterministic **Mock** provider so the entire demo works with no API keys.
+- **How we used it:** we added the Vercel URL as the target app in Replay QA and started an autonomous
+  QA run. Replay explores the dashboard like a real user — launch a mission, approve the governance gate,
+  watch it complete and self-evolve — and reports what breaks, with a recorded session behind each
+  finding. The QA report is captured as demo evidence.
+- **Thematic tie-in:** SwarmOps already runs an internal **QA agent** in every mission (finds an issue →
+  Developer fixes it → QA re-validates), so "autonomous QA" is both a sponsor we use *and* a first-class
+  part of the governed workflow.
 
 ---
 

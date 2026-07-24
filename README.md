@@ -15,6 +15,8 @@ or the runtime — you are the management layer that makes an AI workforce safe 
 
 ![SwarmOps — a live mission: agents work in the graph, governance pauses for approval, the mission completes and evolves](docs/img/demo.gif)
 
+> **Live demo:** **[swarm-ops-self-evolwing-agents-hack.vercel.app](https://swarm-ops-self-evolwing-agents-hack.vercel.app)** — the full stack deployed on **Vercel** (Next.js frontend) + **Render** (FastAPI + Postgres, via the `render.yaml` blueprint), running on the deterministic Mock provider so everything works with no API keys — and autonomously QA'd by **Replay**.
+
 ## Why now
 
 AI employees are entering the enterprise faster than governance models can adapt. Companies are wiring up
