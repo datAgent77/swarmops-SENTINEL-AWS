@@ -14,7 +14,7 @@
   --border-2: #2c374d;
   --edge: #2b3550;
   --muted: #8592a8;
-  --muted-2: #64708a;
+  --muted-2: #7e8ba4;
   --text: #e9eef7;
   --accent: #5b7cfa;
   --accent-2: #7c93ff;
@@ -234,7 +234,7 @@ a.chip.pub:hover { border-color: var(--accent); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn:hover:not(:disabled) { filter: brightness(1.08); }
 .btn.sm { padding: 8px 12px; font-size: 12.5px; }
-.btn.solid-accent { background: var(--accent); color: #fff; }
+.btn.solid-accent { background: #3f5ad4; color: #fff; }
 .btn.solid-ok { background: var(--ok); color: #06331f; }
 .btn.ghost-danger { background: transparent; color: #f0b3b8; border: 1px solid #6a2f36; }
 .btn.ghost-danger:hover:not(:disabled) { background: rgba(229,106,118,.1); }
@@ -295,6 +295,7 @@ a.chip.pub:hover { border-color: var(--accent); }
 }
 .controls input { flex: 1; min-width: 120px; background: #0a0f19; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 13px; outline: none; font-family: inherit; font-size: 14px; }
 .controls input:focus { border-color: var(--accent); }
+.controls input::placeholder { color: var(--muted); opacity: 1; }
 .ctl-live { display: flex; gap: 6px; }
 .ctl-btn { background: #19202f; color: #c3cde2; border: 1px solid var(--border-2); border-radius: 10px; padding: 11px 13px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; white-space: nowrap; }
 .ctl-btn:hover:not(:disabled) { background: #202940; }
