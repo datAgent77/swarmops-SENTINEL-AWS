@@ -13,6 +13,7 @@ import { ApprovalPanel } from "./components/ApprovalPanel";
 import { EvolutionPanel } from "./components/EvolutionPanel";
 import { CompletionOverlay } from "./components/CompletionOverlay";
 import { MissionControls } from "./components/MissionControls";
+import { RingStatus } from "./components/RingStatus";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const DEMO_OBJECTIVE = "Launch a secure AI-powered customer support portal.";
@@ -351,6 +352,7 @@ export default function MissionControl() {
             <span className="chip-k">GOV</span>
             {govCount} checks
           </div>
+          <RingStatus />
           {sponsors.length > 0 ? (
             <div className="chip tools" title="Sponsor tools in use">
               <span className="chip-k">TOOLS</span>

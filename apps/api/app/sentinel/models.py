@@ -88,7 +88,12 @@ class SecurityDevice(BaseModel):
 # --- events -------------------------------------------------------------------
 
 class SecurityEvent(BaseModel):
-    """A single sensor event. Many events may correlate into one incident."""
+    """A single sensor event. Many events may correlate into one incident.
+
+    The base fields are provider-agnostic (P01). The optional ``provider_*`` and
+    media fields (P02) carry a normalized Ring event without leaking raw payloads:
+    only a hash of the raw metadata is retained, never secrets or media URLs.
+    """
 
     event_id: str = Field(default_factory=lambda: _new_id("evt"))
     location_id: str
@@ -99,6 +104,15 @@ class SecurityEvent(BaseModel):
     # Provenance/authenticity are proven upstream (e.g. Ring HMAC). Default False
     # so unverified events are never silently trusted.
     signature_verified: bool = False
+
+    # --- P02: normalized provider (Ring) fields (all optional) ----------------
+    provider: str | None = None                 # e.g. "ring"
+    provider_event_id: str | None = None        # stable id for dedup (meta.request_id)
+    provider_event_type: str | None = None      # e.g. "motion_detected"
+    component_id: str | None = None             # multi-camera component
+    motion_type: str | None = None              # e.g. "human" | "package" | "vehicle"
+    media_reference: str | None = None          # opaque handle, never a sensitive URL
+    raw_metadata_hash: str | None = None        # sha256 of the raw payload (audit, no PII)
 
 
 # --- context (facts, never inferred from AI) ----------------------------------

@@ -71,6 +71,17 @@ class Settings(BaseSettings):
     cited_api_key: str | None = Field(default=None, alias="CITED_API_KEY")
     cited_base_url: str = Field(default="https://cited.md/api", alias="CITED_BASE_URL")
 
+    # --- Ring sensing layer (Sentinel P02) --------------------------------
+    # Provider: "auto" (developer if configured, else simulator) | "developer" |
+    # "simulator" | "mock". The simulator emits documented, locally-signed Ring
+    # events so the demo needs no real Ring credentials.
+    ring_provider: str = Field(default="auto", alias="RING_PROVIDER")
+    ring_client_id: str | None = Field(default=None, alias="RING_CLIENT_ID")
+    ring_client_secret: str | None = Field(default=None, alias="RING_CLIENT_SECRET")
+    ring_webhook_secret: str | None = Field(default=None, alias="RING_WEBHOOK_SECRET")
+    ring_access_token: str | None = Field(default=None, alias="RING_ACCESS_TOKEN")
+    ring_api_base: str = Field(default="https://api.amazonvision.com", alias="RING_API_BASE")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:

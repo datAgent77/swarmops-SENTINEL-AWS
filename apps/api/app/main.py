@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import approvals, evolution, missions, stream
+from app.api import approvals, evolution, missions, ring, stream
 from app.api.errors import register_error_handlers
 from app.config import get_settings
 
@@ -25,6 +25,7 @@ app.include_router(missions.router)
 app.include_router(approvals.router)
 app.include_router(stream.router)
 app.include_router(evolution.router)
+app.include_router(ring.router)
 
 
 @app.get("/health", tags=["health"])
