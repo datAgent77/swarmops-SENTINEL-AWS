@@ -82,6 +82,15 @@ class Settings(BaseSettings):
     ring_access_token: str | None = Field(default=None, alias="RING_ACCESS_TOKEN")
     ring_api_base: str = Field(default="https://api.amazonvision.com", alias="RING_API_BASE")
 
+    # --- Bedrock perception layer (Sentinel P03, AWS Builder) --------------
+    # Provider: "auto" (Bedrock if configured, else deterministic Mock) | "bedrock"
+    # | "mock". AWS credentials come from the standard boto3 chain (env/role).
+    perception_provider: str = Field(default="auto", alias="PERCEPTION_PROVIDER")
+    bedrock_region: str = Field(default="us-east-1", alias="BEDROCK_REGION")
+    bedrock_model_id: str | None = Field(default=None, alias="BEDROCK_MODEL_ID")
+    perception_timeout_ms: int = Field(default=12000, alias="PERCEPTION_TIMEOUT_MS")
+    perception_min_confidence: float = Field(default=0.5, alias="PERCEPTION_MIN_CONFIDENCE")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:

@@ -14,6 +14,7 @@ import { EvolutionPanel } from "./components/EvolutionPanel";
 import { CompletionOverlay } from "./components/CompletionOverlay";
 import { MissionControls } from "./components/MissionControls";
 import { RingStatus } from "./components/RingStatus";
+import { PerceptionPanel } from "./components/PerceptionPanel";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const DEMO_OBJECTIVE = "Launch a secure AI-powered customer support portal.";
@@ -376,6 +377,8 @@ export default function MissionControl() {
           <div className={`chip status ${status}`}>{STATUS_LABEL[status] ?? status}</div>
         </div>
       </header>
+
+      <PerceptionPanel />
 
       <MetricsRail
         metrics={snapshot?.metrics}

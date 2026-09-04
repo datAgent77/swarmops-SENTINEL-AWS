@@ -176,9 +176,10 @@ class BuildingContext(BaseModel):
 
 # --- AI perception (no authorization allowed) ---------------------------------
 
-_PROHIBITED_OBSERVATION_FIELDS = frozenset(
-    {"allow_access", "deny_access", "approved", "authorized", "unlock", "grant", "decision"}
-)
+_PROHIBITED_OBSERVATION_FIELDS = frozenset({
+    "allow_access", "deny_access", "approve_action", "execute", "unlock", "unlock_door",
+    "approved", "authorized", "authorize", "grant", "grant_access", "decision", "policy_decision",
+})
 
 
 class SecurityObservation(BaseModel):
