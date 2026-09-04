@@ -27,6 +27,21 @@ type ObserveResponse = {
   telemetry: Telemetry;
 };
 
+type Decision = {
+  decision: string;
+  reason_codes: string[];
+  policy_id: string;
+  policy_version: string;
+  policy_hash: string;
+};
+
+type WinnerScenario = {
+  ai_recommendation: string;
+  grant_denied: boolean;
+  risk: { risk_score: number; risk_level: string };
+  decisions: { grant_temporary_access: Decision; send_warning: Decision };
+};
+
 // A deliberately adversarial scene: an on-camera sign trying to hijack authority.
 // Bedrock may DESCRIBE it; it can never act on it.
 const SAMPLE = {
@@ -56,6 +71,7 @@ function Bool({ label, on }: { label: string; on: boolean }) {
 
 export function PerceptionPanel() {
   const [data, setData] = useState<ObserveResponse | null>(null);
+  const [scenario, setScenario] = useState<WinnerScenario | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,13 +79,18 @@ export function PerceptionPanel() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_URL}/api/perception/observe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(SAMPLE),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      setData((await res.json()) as ObserveResponse);
+      const [obsRes, scnRes] = await Promise.all([
+        fetch(`${API_URL}/api/perception/observe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(SAMPLE),
+        }),
+        // The authoritative decision comes from real backend policy evaluation.
+        fetch(`${API_URL}/api/governance/winner-scenario`),
+      ]);
+      if (!obsRes.ok) throw new Error(String(obsRes.status));
+      setData((await obsRes.json()) as ObserveResponse);
+      if (scnRes.ok) setScenario((await scnRes.json()) as WinnerScenario);
     } catch (e) {
       setError(`perception unavailable (${e instanceof Error ? e.message : "error"})`);
     } finally {
@@ -183,17 +204,50 @@ export function PerceptionPanel() {
             The observation on the left is an <b>input</b> only. Whether any action is allowed is decided by a
             deterministic policy engine and, for consequential actions, a human — never by the model.
           </div>
-          {data ? (
-            <div style={{ fontSize: 13, marginTop: 10 }}>
-              {data.needs_human_review ? (
-                <span style={{ color: "#b45309" }}>
-                  ⚠ Low-confidence / UNKNOWN → recommend <b>REQUEST_LIVE_REVIEW</b> (human verification).
-                </span>
-              ) : (
-                <span style={{ color: "#15803d" }}>
-                  Observation is a usable signal; the deterministic engine will decide (P04+).
-                </span>
-              )}
+          {scenario ? (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 12, color: "#475569" }}>
+                AI RECOMMENDS: <b>{scenario.ai_recommendation.replace(/_/g, " ")}</b>
+              </div>
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  background: scenario.grant_denied ? "rgba(220,38,38,0.10)" : "rgba(22,163,74,0.10)",
+                  border: `1px solid ${scenario.grant_denied ? "#dc2626" : "#16a34a"}`,
+                }}
+              >
+                <div style={{ fontWeight: 700, color: scenario.grant_denied ? "#b91c1c" : "#15803d" }}>
+                  SWARMOPS SECURITY POLICY — {scenario.decisions.grant_temporary_access.decision}
+                </div>
+                <div style={{ fontSize: 12, color: "#334155", marginTop: 4 }}>
+                  {scenario.decisions.grant_temporary_access.reason_codes.map((c) => (
+                    <span
+                      key={c}
+                      style={{
+                        display: "inline-block",
+                        margin: "2px 4px 2px 0",
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                        background: "rgba(148,163,184,0.2)",
+                        fontSize: 11,
+                      }}
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ fontSize: 12, color: "#334155", marginTop: 6 }}>
+                  Then <b>SEND WARNING</b> → {scenario.decisions.send_warning.decision.replace(/_/g, " ")}.
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>
+                risk {scenario.risk.risk_level} ({scenario.risk.risk_score}/100) · policy{" "}
+                {scenario.decisions.grant_temporary_access.policy_id} v
+                {scenario.decisions.grant_temporary_access.policy_version} #
+                {scenario.decisions.grant_temporary_access.policy_hash}
+              </div>
             </div>
           ) : null}
           <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 10 }}>
