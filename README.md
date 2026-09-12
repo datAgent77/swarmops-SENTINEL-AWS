@@ -148,6 +148,43 @@ guided demo that completes deterministically across consecutive runs.
 > Tests assume no `.env` (CI has no keys). The repo's real `.env` is gitignored; run the suite with a
 > clean environment.
 
+## Security
+
+- **No LLM in the authorization path.** Bedrock output is an observation and is rejected if it
+  carries any authority field; the decision is the deterministic policy engine's.
+- **Ring webhooks are authenticated** — HMAC-SHA256 `X-Signature` over the raw body,
+  constant-time; unsigned/tampered bodies are rejected (401) and never processed.
+- **Role-based, expiring approvals**; the approver's role is resolved server-side (never
+  claimable), the proposer cannot self-approve, and no request field can skip approval.
+- **Exactly-once execution** under retries and concurrent approvals; append-only audit.
+- **No secrets in the repo** (`.env` gitignored; only `.env.example` is tracked); provider
+  status is truthful (no false "connected").
+
+## Privacy — judge behavior, not identity
+
+Sentinel decides from *what is happening*, never *who* someone is. There is **no** facial
+recognition, demographic inference, gait or voiceprint identification, or cross-camera
+identity tracking. Perception emits only behavioral signals; raw video is not the system of
+record (only a structured observation + a SHA-256 of the raw payload is kept). Full review:
+[`docs/sentinel/PRIVACY.md`](docs/sentinel/PRIVACY.md).
+
+## Limitations
+
+- Physical actuation (smart lock / siren) is **not** performed — the Ring Partner API does
+  not expose it; `GRANT_TEMPORARY_ACCESS` stays a governed, default-denied recommendation.
+- Live Ring events need partner credentials; the keyless demo uses the documented Playground
+  simulator. Live Bedrock needs AWS creds + a model id; otherwise a deterministic Mock runs.
+- The officer/incident state is **in-process** (durable persistence is a follow-up); the
+  authority semantics (deterministic policy, roles, expiry, exactly-once, audit) are enforced.
+- MCP production auth (bearer/OAuth → operator role) is a documented follow-up.
+
+## Submission docs
+
+- 3-minute demo script — [`docs/DEMO_SCRIPT_3MIN.md`](docs/DEMO_SCRIPT_3MIN.md)
+- Devpost write-up — [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md)
+- Integration proof (Ring · Bedrock · Alexa+) — [`docs/sentinel/INTEGRATION_PROOF.md`](docs/sentinel/INTEGRATION_PROOF.md)
+- Friction log — [`docs/sentinel/FRICTION_LOG.md`](docs/sentinel/FRICTION_LOG.md)
+
 ## Built on SwarmOps (honest disclosure)
 
 Sentinel reuses an existing **SwarmOps** governance core (deterministic engine, human-approval flow,

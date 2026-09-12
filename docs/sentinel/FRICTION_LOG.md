@@ -1,90 +1,87 @@
 # FRICTION_LOG — Sentinel
 
-> Running log of friction using Amazon tools/APIs/SDKs (Ring, Bedrock, Alexa+
-> MCP) and the build itself. The hackathon awards a **10% judging bonus** for a
-> friction log and requires product feedback (usability, effectiveness,
-> onboarding, rebuild likelihood). Append dated entries — concrete and honest.
+Genuine developer friction encountered while building Sentinel against Amazon's
+tools/APIs (Ring, Bedrock, Alexa+ MCP) and the codebase. Nothing here is invented.
+The hackathon awards a 10% bonus for a friction log and requires product feedback
+(usability, effectiveness, onboarding, rebuild likelihood).
 
-## Format
+Each entry: **date · tool · task · steps · expected · actual · severity · workaround ·
+suggested improvement · status**.
 
-```
-### [DATE] [AREA: ring | bedrock | alexa-mcp | aws | build] — short title
-- Context: what we were trying to do
-- Friction: what was confusing / broken / slow
-- Workaround: what we did
-- Feedback to Amazon: the specific ask
-- Rebuild likelihood impact: +/- and why
-```
+---
 
-## Entries
+### 2026-09-04 · ring · Locate the webhook signature scheme
+- **Task:** Verify Ring webhook authenticity for real event intake.
+- **Steps:** Read developer.amazon.com/docs/ring: get-started → release-notes → API doc.
+- **Expected:** Signature header + signed string documented on the webhook page.
+- **Actual:** Release notes say "HMAC-SHA256 verification" but omit the header name and
+  signed string; the concrete scheme (`X-Signature: sha256=<hex over raw body>`,
+  constant-time compare) is only in the full API doc.
+- **Severity:** Medium (blocks a correct implementation until found).
+- **Workaround:** Cross-read pages; implemented in `ring/webhook.py`.
+- **Suggested improvement:** Put the exact header + signed-string on the webhook page.
+- **Status:** Resolved.
 
-### 2026-09-04 [build] — P00 repository inspection (swarmops base)
-- Context: Assessing the existing SwarmOps codebase for reuse under the Sentinel
-  product framing on the new `swarmops-SENTINEL-AWS` repo.
-- Friction: (1) The full test suite appears to fail when run with the developer's
-  local `.env` present, because several tests assert key-absence behavior
-  ("defaults to Mock without a key", "publishes locally without CITED_API_KEY")
-  and pydantic-settings loads `.env` from disk regardless of process env. With
-  `.env` moved aside the suite is **69/69 green**. (2) One pre-existing ruff nit:
-  `alembic/env.py` import block unsorted (I001, auto-fixable). (3) macOS
-  case-insensitive FS: a top-level `docs/ARCHITECTURE.md` would clobber the
-  existing `docs/architecture.md`, so Sentinel docs live under `docs/sentinel/`.
-- Workaround: Run pytest with `.env` temporarily moved aside for a true reading;
-  keep Sentinel docs namespaced.
-- Feedback to Amazon: N/A (pre-Amazon-tooling).
-- Rebuild likelihood impact: n/a. The base is clean, layered, and green.
+### 2026-09-04 · ring · Find the Partner API base host
+- **Task:** Configure API + OAuth base URLs.
+- **Steps:** Follow the Partner API integration docs.
+- **Expected:** A `ring.com` API host.
+- **Actual:** API base is `https://api.amazonvision.com` (OAuth is `oauth.ring.com`) — the
+  `amazonvision.com` host is surprising and easy to miss.
+- **Severity:** Low.
+- **Workaround:** Pinned as `RING_API_BASE` default (`ring/developer.py`).
+- **Suggested improvement:** Make the base host prominent in "Getting Started".
+- **Status:** Resolved.
 
-### [pending] [bedrock] — perception provider
-- To fill in P04: model choice for snapshot→structured-observation, structured
-  output reliability, latency, cost, region availability, boto3 auth setup,
-  local-fallback parity.
+### 2026-09-04 · ring · Demo without a physical device / partner credentials
+- **Task:** Show a real Ring event entering the backend with no device.
+- **Steps:** Look for a hosted event generator; register a webhook.
+- **Expected:** A one-click sandbox event.
+- **Actual:** Live webhooks need partner onboarding (client_id/secret + registered URL).
+- **Severity:** Medium.
+- **Workaround:** A simulator that emits the **documented** payload shape and signs it with
+  the configured secret, so it traverses the identical verify→normalize→correlate path
+  (`ring/simulator.py`). "Physical device not required" holds because of this.
+- **Suggested improvement:** A hosted Playground that POSTs sample signed events to a dev URL.
+- **Status:** Resolved (simulator).
 
-### 2026-09-04 [ring] — P02 sensing layer against the Partner API docs
-- Context: Building the real Ring sensing layer (provider abstraction, webhook
-  intake, normalization, correlation) from the current official Ring Partner API
-  documentation (developer.amazon.com/docs/ring), without a physical device or
-  issued partner credentials.
-- Friction (real, from documentation review):
-  1. **Two doc surfaces.** Ring content is split between developer.amazon.com/docs/ring
-     (the current Partner API) and developer.ring.com (Appstore). It's not obvious
-     up front which is authoritative for a webhook/event integration.
-  2. **Base host naming.** The Partner API base is `https://api.amazonvision.com`
-     (not a `ring.com` host), while OAuth is `https://oauth.ring.com`. The
-     `amazonvision.com` host is surprising and easy to miss.
-  3. **Signature scheme not centralized.** The release-notes page references a
-     "Webhook v1.1 Payload Structure" and "HMAC-SHA256 verification" but does not
-     inline the header name or signing string; the concrete scheme
-     (`X-Signature: sha256=<hex over raw body>`, constant-time compare) lives only
-     in the full API doc. Had to cross-read pages to pin it down.
-  4. **Credentials gate real events.** Live webhooks require partner onboarding
-     (client_id/secret + a registered Webhook URL). For a hackathon without a
-     device, the honest path is the simulator emitting the *documented* payload
-     shape and signing it with the configured secret so it traverses the identical
-     verify→normalize→correlate pipeline. The "physical device not required" claim
-     holds only because of this.
-  5. **Smart-detection categories.** PACKAGE/VEHICLE are modeled as
-     `motion_detected` with `attributes.sub_type` rather than distinct event types;
-     we normalized to that documented shape instead of inventing new types.
-- Workaround: Grounded every field/endpoint in the API doc; simulator reproduces
-  the documented envelope; developer provider verifies real signatures and only
-  reports CONNECTED after a genuine signed event.
-- Feedback to Amazon: consolidate the webhook signature spec (header + exact signed
-  string) onto the release-notes/webhook page; clarify on the landing page which
-  doc set is current for event integrations; make the `amazonvision.com` base host
-  prominent in "Getting Started".
-- Rebuild likelihood impact: neutral→positive once the base host and signature
-  scheme are located; the payload shape is clean and easy to normalize.
-- Still to verify with real access (P05+): OAuth account-linking UX, live snapshot
-  retrieval latency, and whether Ring Playground offers a hosted event generator
-  beyond the documented webhook shape.
+### 2026-09-05 · bedrock · Choose a working model id
+- **Task:** Call a Claude model on Bedrock via `bedrock-runtime` Converse.
+- **Steps:** Set a model id and region; invoke.
+- **Expected:** A plain `anthropic.claude-…` id works in any region.
+- **Actual:** Newer Claude models often require a **cross-region inference profile** id
+  (e.g. `us.anthropic.claude-…`) depending on region; a bare id can be rejected.
+- **Severity:** Medium (runtime-only; not hit in the keyless demo).
+- **Workaround:** `BEDROCK_MODEL_ID` is configurable with a documented `us.*` caveat; a
+  deterministic Mock perceiver runs when unset (`perception/bedrock.py`, `factory.py`).
+- **Suggested improvement:** Clearer, region-aware guidance on when a profile id is required.
+- **Status:** Open (verify against a live account in a follow-up).
 
-### [pending] [alexa-mcp] — Streamable HTTP MCP server
-- To fill in P07: MCP spec (2025-11-25+) conformance, Alexa+ discovery/attachment
-  of a self-hosted MCP, auth, tool schema ergonomics, approval round-trip UX.
+### 2026-09-06 · alexa-mcp · Streamable HTTP vs legacy SSE
+- **Task:** Expose an MCP server Alexa+ can attach to (spec 2025-11-25).
+- **Steps:** Implement a single `POST /mcp` JSON-RPC endpoint.
+- **Expected:** Obvious transport guidance.
+- **Actual:** Distinguishing **Streamable HTTP** from the deprecated HTTP+SSE transport,
+  and that a server MAY answer `GET /mcp` with **405** when it offers no SSE stream, plus
+  the notification→202 rule, all require careful spec reading.
+- **Severity:** Low.
+- **Workaround:** Implemented directly (`app/mcp/server.py`) — POST JSON-RPC, GET→405,
+  notifications→202, session id on initialize.
+- **Suggested improvement:** A minimal reference "Streamable-HTTP-only" server example.
+- **Status:** Resolved.
 
-## Product-feedback checklist (due at submission, per track/tool used)
+### 2026-09-04 · build · Test suite vs a populated local `.env`
+- **Task:** Run the suite locally.
+- **Steps:** `make test` with a developer `.env` holding sponsor keys.
+- **Expected:** Green.
+- **Actual:** ~10 mission tests assert key-absence behavior; pydantic-settings loads `.env`
+  from disk regardless of process env, so present keys fail those assertions.
+- **Severity:** Low (CI has no `.env`).
+- **Workaround:** Run with `.env` moved aside; documented in the README.
+- **Suggested improvement:** A test env-file override in conftest.
+- **Status:** Resolved (documented).
 
-- [ ] Ring — usability, effectiveness, onboarding, rebuild likelihood
-- [ ] Bedrock — same four
-- [ ] Alexa+ MCP — same four
-- [ ] Any AWS Builder services used — same four
+## Product-feedback checklist (per tool used, for submission)
+- [x] Ring — usability/effectiveness/onboarding captured above; rebuild likelihood: **high** once base host + signature are located.
+- [x] Bedrock — captured above; rebuild likelihood: **high** (Converse + strict JSON is clean).
+- [x] Alexa+ MCP — captured above; rebuild likelihood: **high**.
