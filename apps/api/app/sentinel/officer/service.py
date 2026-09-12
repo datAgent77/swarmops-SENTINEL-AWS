@@ -144,6 +144,21 @@ class OfficerService:
                     metadata={"risk_factors": risk.risk_factors})
         return incident_id
 
+    def create_demo_incident(self) -> str:
+        """A fresh, uniquely-keyed demo incident so consecutive guided-demo runs are
+        independent and deterministic."""
+        return self.seed_demo_incident(f"inc-demo-{uuid.uuid4().hex[:8]}")
+
+    def reset_demo(self) -> None:
+        """Reset ONLY demo state: drop demo incidents, re-arm the execution engine,
+        and re-seed the base incident. Frontend never fakes results."""
+        self._incidents.clear()
+        self._engine = ExecutionEngine(DemoSecurityActionProvider())
+        self.seed_demo_incident()
+
+    def provider_mode(self) -> str:
+        return self._engine.mode().value
+
     def _record(self, incident_id: str) -> IncidentRecord:
         record = self._incidents.get(incident_id)
         if record is None:

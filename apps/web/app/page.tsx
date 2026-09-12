@@ -14,8 +14,6 @@ import { EvolutionPanel } from "./components/EvolutionPanel";
 import { CompletionOverlay } from "./components/CompletionOverlay";
 import { MissionControls } from "./components/MissionControls";
 import { RingStatus } from "./components/RingStatus";
-import { PerceptionPanel } from "./components/PerceptionPanel";
-import { SentinelConsole } from "./components/SentinelConsole";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const DEMO_OBJECTIVE = "Launch a secure AI-powered customer support portal.";
@@ -379,9 +377,22 @@ export default function MissionControl() {
         </div>
       </header>
 
-      <PerceptionPanel />
-
-      <SentinelConsole />
+      <a
+        href="/sentinel"
+        style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
+          margin: "16px 0", padding: "14px 18px", borderRadius: 12, textDecoration: "none",
+          border: "1px solid #2dd4bf", background: "rgba(45,212,191,0.08)", color: "inherit",
+        }}
+      >
+        <span>
+          <strong style={{ display: "block", fontSize: 15 }}>Sentinel — AI Security Officer</strong>
+          <span style={{ fontSize: 13, color: "#64748b" }}>
+            Ring + Bedrock, governed by SwarmOps. Open the security-officer command screen →
+          </span>
+        </span>
+        <span style={{ fontWeight: 800, color: "#0f766e" }}>OPEN ↗</span>
+      </a>
 
       <MetricsRail
         metrics={snapshot?.metrics}
