@@ -18,11 +18,18 @@ class ProposeBody(BaseModel):
     action_type: str
     actor_id: str = "owner-alex"
     incident_id: str = DEMO_INCIDENT_ID
+    # Stable client id so retries of the SAME request never duplicate execution.
+    action_request_id: str | None = None
 
 
 class ResolveBody(BaseModel):
     approval_id: str
     actor_id: str
+    incident_id: str = DEMO_INCIDENT_ID
+
+
+class ResolveIncidentBody(BaseModel):
+    actor_id: str = "officer-sam"
     incident_id: str = DEMO_INCIDENT_ID
 
 
@@ -48,7 +55,20 @@ async def timeline(incident_id: str = DEMO_INCIDENT_ID) -> dict:
 
 @router.post("/propose")
 async def propose(body: ProposeBody) -> dict:
-    return officer.propose(body.incident_id, body.action_type, body.actor_id)
+    return officer.propose(body.incident_id, body.action_type, body.actor_id,
+                           action_request_id=body.action_request_id)
+
+
+@router.post("/resolve")
+async def resolve(body: ResolveIncidentBody) -> dict:
+    return officer.resolve(body.incident_id, body.actor_id)
+
+
+@router.get("/winner-proof")
+async def winner_proof() -> dict:
+    """Prove exactly-once: warning is approved and executes, then the exact same
+    request is replayed and DUPLICATE EXECUTION is PREVENTED (one execution only)."""
+    return officer.winner_proof()
 
 
 @router.post("/approve")

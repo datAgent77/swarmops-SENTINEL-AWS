@@ -89,9 +89,10 @@ class ActionStatus(str, Enum):
 
 
 class ActionExecutionStatus(str, Enum):
-    """Lifecycle of a concrete execution attempt (exactly-once guarded later)."""
+    """Lifecycle of a concrete execution attempt (exactly-once guarded)."""
 
     PENDING = "PENDING"
+    EXECUTING = "EXECUTING"
     EXECUTED = "EXECUTED"
     FAILED = "FAILED"
     SKIPPED = "SKIPPED"

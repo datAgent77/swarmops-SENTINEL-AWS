@@ -137,7 +137,7 @@ def test_timeline_records_the_governed_chain():
     res = svc.propose(iid, "SEND_WARNING", "owner-alex")
     svc.approve(iid, res["approval_id"], "officer-sam")
     actions = [e["action"] for e in svc.timeline(iid)]
-    assert any(a.startswith("action.proposed") for a in actions)
-    assert "approval.requested" in actions
-    assert "approval.granted" in actions
-    assert any(a.startswith("action.executed") for a in actions)
+    assert "action_proposed" in actions
+    assert "approval_requested" in actions
+    assert "approval_granted" in actions
+    assert "execution_completed" in actions

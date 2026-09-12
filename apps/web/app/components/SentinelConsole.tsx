@@ -32,6 +32,7 @@ export function SentinelConsole() {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [approvalId, setApprovalId] = useState<string | null>(null);
   const [line, setLine] = useState<string>("Load an incident, then propose an action.");
+  const [proof, setProof] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -78,6 +79,21 @@ export function SentinelConsole() {
     setBusy(false);
   };
 
+  const runProof = async () => {
+    setBusy(true);
+    const { ok, data } = await call("/api/sentinel/winner-proof");
+    if (ok) {
+      const p = data as { executed_count: number; duplicate_prevented: boolean; first_execution_id: string };
+      setProof(
+        `Warning approved & executed once (${p.first_execution_id}). Replayed the exact same request → ` +
+          `${p.duplicate_prevented ? "DUPLICATE EXECUTION PREVENTED" : "?"}. Total executions: ${p.executed_count}.`,
+      );
+    } else {
+      setProof("winner proof unavailable");
+    }
+    setBusy(false);
+  };
+
   return (
     <section
       style={{
@@ -113,6 +129,27 @@ export function SentinelConsole() {
       </div>
 
       <div style={{ marginTop: 12, fontSize: 13, color: "#0f172a" }}>{line}</div>
+
+      <div style={{ marginTop: 12, borderTop: "1px dashed rgba(148,163,184,0.4)", paddingTop: 12 }}>
+        <button onClick={runProof} disabled={busy} style={btn("#0f766e")}>
+          Winner proof: execute, then replay same request
+        </button>
+        {proof ? (
+          <div
+            style={{
+              marginTop: 8,
+              padding: "8px 10px",
+              borderRadius: 8,
+              border: "1px solid #0f766e",
+              background: "rgba(15,118,110,0.08)",
+              fontSize: 13,
+              color: "#0f172a",
+            }}
+          >
+            {proof}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

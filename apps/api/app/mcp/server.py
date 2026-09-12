@@ -59,7 +59,8 @@ def _h_allowed_actions(a: dict) -> dict:
 
 
 def _h_propose(a: dict) -> dict:
-    return officer.propose(a["incident_id"], a["action_type"], a["actor_id"])
+    return officer.propose(a["incident_id"], a["action_type"], a["actor_id"],
+                           action_request_id=a.get("action_request_id"))
 
 
 def _h_approve(a: dict) -> dict:
@@ -87,8 +88,9 @@ TOOLS: list[dict] = [
     _tool("get_allowed_actions", "List actions and their deterministic policy decisions.",
           {"incident_id": _STR}, ["incident_id"], True, _h_allowed_actions),
     _tool("propose_security_action",
-          "Propose an action; the deterministic policy decides ALLOW/REQUIRE_APPROVAL/DENY.",
-          {"incident_id": _STR, "action_type": _STR, "actor_id": _STR},
+          "Propose an action; the deterministic policy decides ALLOW/REQUIRE_APPROVAL/DENY. "
+          "Pass a stable action_request_id so retries never duplicate execution.",
+          {"incident_id": _STR, "action_type": _STR, "actor_id": _STR, "action_request_id": _STR},
           ["incident_id", "action_type", "actor_id"], False, _h_propose),
     _tool("approve_security_action",
           "Approve a pending action; validated by actor role, status, and expiry.",
