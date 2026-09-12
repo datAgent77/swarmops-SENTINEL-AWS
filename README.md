@@ -1,258 +1,174 @@
-# SwarmOps
+# Sentinel — AI Security Officer for Ring
 
-### The Operating System for AI Workforces — **Govern. Audit. Evolve.**
+### Turn Ring from a camera that watches the door into a security officer that **understands, evaluates risk, follows policy, asks for approval, acts — and records exactly what happened.**
 
 ![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
-![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
-![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
-![Governance](https://img.shields.io/badge/Governance-Deterministic-46c58a)
-![Hackathon](https://img.shields.io/badge/Hackathon-Self--Evolving%20Agents-5b7cfa)
+![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
+![Amazon Bedrock](https://img.shields.io/badge/Amazon-Bedrock-FF9900?logo=amazonaws&logoColor=white)
+![Ring](https://img.shields.io/badge/Ring-Partner%20API-1E90FF)
+![MCP](https://img.shields.io/badge/Alexa%2B-MCP%202025--11--25-5b7cfa)
+![Governance](https://img.shields.io/badge/Authority-Deterministic-46c58a)
 
-**SwarmOps sits above AI runtimes and control planes, providing enterprise governance, human approvals,
-auditability, workforce analytics, and safe agent evolution.** You are not the LLM, the agent framework,
-or the runtime — you are the management layer that makes an AI workforce safe to run in a real company.
+**Sentinel** is an AI security officer for a commercial entrance. **Ring** gives it eyes,
+**Amazon Bedrock** gives it understanding, **SwarmOps** gives it boundaries, and a **human**
+retains authority over consequential actions.
 
-![SwarmOps — a live mission: agents work in the graph, governance pauses for approval, the mission completes and evolves](docs/img/demo.gif)
+> **Core principle — intelligence may be probabilistic, authority must be deterministic, and
+> no LLM may authorize its own action.** Bedrock *describes* the scene; a deterministic policy
+> engine *decides*; a human *approves* anything consequential. Every step is on an append-only
+> audit trail.
 
-> **Live demo:** **[swarm-ops-self-evolwing-agents-hack.vercel.app](https://swarm-ops-self-evolwing-agents-hack.vercel.app)** — the full stack deployed on **Vercel** (Next.js frontend) + **Render** (FastAPI + Postgres, via the `render.yaml` blueprint), running on the deterministic Mock provider so everything works with no API keys — and autonomously QA'd by **Replay**.
+Built for the **Build, Ship, Shape: Amazon Developer Hackathon** (Ring track + AWS Builder).
+Sentinel is built on top of an existing SwarmOps governance core — see
+[Provenance](#built-on-swarmops-honest-disclosure).
 
-## Why now
+## The winner moment
 
-AI employees are entering the enterprise faster than governance models can adapt. Companies are wiring up
-autonomous agents that can deploy code, move money, and touch customer data — with none of the controls
-they demand of human employees. SwarmOps manages an AI workforce with the same rigor used for people:
-clear authority, human approval on high-risk actions, a complete audit trail, and safe, reversible
-improvement over time.
+Open **`/sentinel`**, press **START DEMO** — a scripted-but-real 23:42 entrance incident:
 
-## The problem
+```
+23:42  RING       motion ×3 at a closed entrance (real, HMAC-signed events ingested)
+       BEDROCK    perception → { person_present, prolonged, repeated, confidence } (no authority)
+       CONTEXT    building_open=false · expected_visitor=none · access_request=none · credential=none
+       RISK       CRITICAL (100/100) — deterministic, no LLM
 
-Autonomous multi-agent systems are impressive right up until an agent does something irreversible —
-deploys to production, exports customer data, blows a budget — because the model *decided* to. You
-cannot ship that to a real company. And when people bolt "self-improvement" on top, it usually means
-the agents rewrite their own prompts or code with no audit trail, no human gate, and no way to roll
-back. That is ungovernable, and it is unsafe.
+  AI  recommends:  GRANT TEMPORARY ACCESS
+  SwarmOps:        DENIED  →  Outside business hours · No verified visitor ·
+                             No approved access request · No valid credential
 
-## The product
+  AI  recommends:  SEND WARNING
+  SwarmOps:        HUMAN APPROVAL REQUIRED (role: security)
+       HUMAN       approves (web console or Alexa+)
+       EXECUTOR    warning delivered — EXACTLY ONCE
+       REPLAY      same request again → DUPLICATE BLOCKED (one execution only)
+       AUDIT       full chain recorded, append-only
+```
 
-SwarmOps runs a six-agent company (CEO, Product Manager, Developer, Security, QA, Finance) through a
-real mission: *"Launch a secure customer support portal."* The agents reason with an LLM, hand off to
-each other, and request tools — but **every governed action passes through a deterministic engine that
-no model can influence.** Production deploys pause for a human. Unauthorized data exports are blocked.
-Every state change is written to an append-only, Postgres-backed audit trail and streamed live to a
-"living workforce" dashboard. After the mission, the system grades each agent, proposes improvements,
-and versions them under the same governance.
-
-Three guarantees hold the whole thing together:
-
-1. **Deterministic governance decides** — the enforcement path contains no LLM, no randomness, and no time or network dependence.
-2. **The backend is the source of truth** — all state is in PostgreSQL; refresh the page any time and nothing is lost.
-3. **Everything is auditable** — every action, decision, approval, cost, and evolution step is an immutable event.
-
-## Why it is self-evolving
-
-After every mission completes, an evolution layer (`apps/api/app/evolution/`) runs automatically:
-
-- **Performance evaluation** — each agent is scored 0–100 from *persisted* mission data across ten metrics (task success, latency, handoff quality, reasoning quality, tool efficiency, approvals, blocked actions, cost, retries, memory use).
-- **Weakness detection → improvement proposals** — an improvement engine maps detected weaknesses to concrete, *data-only* configuration changes (planning/reasoning heuristics, tool preferences, budget posture).
-- **Versioning** — each proposal becomes a new immutable `AgentVersion` (v1.0 → v1.1 → …). History is never overwritten; a status flag marks which version is active.
-- **Governed activation** — low-risk changes activate automatically; **high-risk changes (system prompt, tool permissions, allowed actions, budget, security) require the same human approval as any production action.**
-- **Comparison & rollback** — versions can be compared from persisted deltas and rolled back to any prior legitimate version.
-
-The dashboard shows this directly: a Mission Summary (top performer, most improved, highest cost/risk,
-biggest opportunity) and a per-agent Self-Evolving Workforce panel with version, score, trend, and an
-Approve/Reject control for any upgrade pending governance.
-
-## Why evolution is safe
-
-Self-improvement here is deliberately constrained so it can never become the thing that breaks a demo —
-or a real deployment:
-
-- **Agents cannot edit executable source code.** Evolution only writes **data rows** (JSONB config deltas) to the database. There is no filesystem write, no code generation, and the running agents execute from static personas — the version `changes` are advisory data, never executed as prompts or code.
-- **Versions are immutable.** A new version is a new row; approve/reject/activate/rollback only move a status flag. No version's content is ever mutated.
-- **High-risk change requires a human.** The same deterministic governance that gates a production deploy gates any high-risk agent change.
-- **Everything is reversible and auditable.** Full version history is preserved; rollback re-activates a prior *legitimate* version (a governance-rejected version can never be rolled back into); every evolution step emits an immutable event.
-- **Evolution can never break a completed mission.** The post-mission hook is wrapped so any failure is recorded as `evolution.failed` and the mission stays completed.
+The differentiator is not the AI — it is the **restraint**: an AI that recommends an action and is
+**denied by a rule it cannot override**, with a human in the loop for the rest.
 
 ## Architecture
 
-SwarmOps is the governance and management layer *above* the AI runtimes — LLMs, agent comms, context —
-never coupled to any one of them.
-
 ```mermaid
 flowchart TB
-    UI["Living Workforce Dashboard<br/>Next.js · React Flow · live SSE"]
-
-    subgraph SWARMOPS["SwarmOps — Enterprise Management Layer"]
-        direction TB
-        ORCH["Orchestrator<br/>explicit state machine"]
-        GOV["Deterministic Governance<br/>no LLM · approvals · block"]
-        EVO["Safe Evolution<br/>immutable versions · governed · rollback"]
-        ORCH --> GOV --> EVO
+    RING["Ring Developer Platform<br/>webhooks · snapshots · WebRTC/WHEP"]
+    subgraph SENTINEL["Sentinel"]
+      INTAKE["Event Intake<br/>HMAC-SHA256 verify · dedupe"]
+      INC["Incident Engine<br/>correlate events → one incident"]
+      PERC["Bedrock Perception<br/>snapshot+meta → structured observation"]
+      CTX["Context Engine<br/>hours · visitors · access reqs · credentials"]
+      subgraph AUTH["SwarmOps — deterministic authority"]
+        RISK["Risk Engine<br/>situational score + severity"]
+        POL["Policy Engine<br/>ALLOW · REQUIRE_APPROVAL · DENY"]
+      end
+      DECIDE{"Decision"}
+      HUM["Human Approval<br/>Alexa+ MCP · Web console"]
+      EXE["Governed Action Executor<br/>exactly-once"]
+      AUD[("Append-only Audit")]
     end
 
-    subgraph RUNTIMES["AI Runtimes & Control Planes (pluggable, provider-independent)"]
-        direction LR
-        LLM["LLM<br/>Claude · OpenAI · Gemini · Pioneer · Mock"]
-        COMMS["Agent comms<br/>Band"]
-        CTX["Context<br/>Senso"]
-        PUB["Publishing<br/>cited.md"]
-    end
-
-    DB[("PostgreSQL<br/>source of truth · append-only audit")]
-
-    UI --> SWARMOPS
-    SWARMOPS --> RUNTIMES
-    SWARMOPS --> DB
-    DB -. live state .-> UI
+    RING --> INTAKE --> INC --> PERC --> CTX --> RISK --> POL --> DECIDE
+    DECIDE -- ALLOW --> EXE
+    DECIDE -- DENY --> AUD
+    DECIDE -- REQUIRE_APPROVAL --> HUM --> EXE
+    EXE --> AUD
 ```
 
-- **Web (`apps/web`):** Next.js 16 + TypeScript (App Router). A real-time dashboard with a React Flow workforce graph, live timeline/conversation/reasoning panels, approval side panel, animated metrics, and a mission-completion overlay.
-- **API (`apps/api`):** FastAPI + Python 3.11. Thin routers → services → repositories (the only code that touches the DB).
-- **Database:** PostgreSQL 16 via SQLAlchemy 2.0 + Alembic. All state, all history.
-- **Live updates:** Server-Sent Events, durable in Postgres, replayable, `Last-Event-ID` reconnect.
-- **Governance:** `app/governance/engine.py` — a pure deterministic function (Scenarios A–E).
-- **LLM abstraction:** `app/providers/llm/` — the *only* place any vendor is called; business logic never imports a vendor SDK.
-- **Evolution:** `app/evolution/` — performance evaluation, improvement engine, immutable versioning, governed activation.
+| Layer | Role | Where |
+|-------|------|-------|
+| **Sensing** | eyes & ears at the door | `app/sentinel/ring/` — Ring Partner API (`api.amazonvision.com`), HMAC-signed webhooks, Playground simulator |
+| **Intelligence** | understand the scene | `app/sentinel/perception/` — Amazon Bedrock (Converse), strict-JSON observation; no authority fields |
+| **Authority** | risk + policy | `app/sentinel/governance/` — deterministic, typed, versioned (`policy_hash`); no LLM, no `eval` |
+| **Officer** | incidents, approvals, exactly-once execution | `app/sentinel/officer/`, `app/sentinel/actions/` |
+| **Human interface** | approve consequential actions | `app/mcp/` (Alexa+ Streamable HTTP MCP) + `/sentinel` web console |
+| **Audit** | what actually happened | append-only timeline with trace/idempotency/policy metadata |
 
-Full detail: [`docs/architecture.md`](docs/architecture.md) · [`docs/domain-model.md`](docs/domain-model.md) · [`docs/api.md`](docs/api.md).
+Full detail: [`docs/sentinel/`](docs/sentinel/) — `WINNER_SPEC`, `PRODUCT_SPEC`, `ARCHITECTURE`,
+`IMPLEMENTATION_PLAN`, `MCP`, `FRICTION_LOG`, `HACKATHON_CHANGES`.
+
+## The command screen
+
+**`/sentinel`** is the AI-Security-Officer command center (not a generic dashboard):
+**ON DUTY** status, live **RING / BEDROCK / SWARMOPS / ALEXA+ MCP** provider indicators, the incident
+card, the officer pipeline (OBSERVE → UNDERSTAND → ASSESS+AUTHORIZE → APPROVE → EXECUTE), the
+**DENIED** centerpiece, the human-approval flow, and the incident timeline. **START DEMO** and
+**RESET DEMO** drive real backend endpoints — the frontend never fakes results.
 
 ## Quick start
 
 ```bash
-# Prerequisites: Python 3.11, Node 20+, PostgreSQL 16 running locally.
-
-make install     # backend venv + deps, frontend deps (installs React Flow, ruff, etc.)
-make db-create   # create the 'swarmops' role + swarmops/swarmops_test databases
-make demo        # migrate + seed, then run BOTH servers together (Ctrl-C stops both)
-```
-
-Then open http://localhost:3000 and click **Run demo mission**.
-
-Prefer two terminals (e.g. to watch logs separately)? Use the individual targets instead of `make demo`:
-
-```bash
-make migrate && make seed
+# Prerequisites: Python 3.11, Node 20+, PostgreSQL running locally.
+make install      # backend venv + deps, frontend deps
+make db-create    # create the swarmops role + swarmops / swarmops_test databases
+make demo         # migrate + seed
 make api          # terminal 1 → FastAPI on http://localhost:8000
 make web          # terminal 2 → Next.js on http://localhost:3000
 ```
 
-> `make db-create` assumes a local Postgres where `psql postgres` connects as a superuser (the default
-> on Postgres.app / Homebrew). If your setup differs, copy `apps/api/.env.example` to `apps/api/.env`
-> and set `DATABASE_URL` to a role that works for you.
+Then open **http://localhost:3000/sentinel** and press **START DEMO**. No API keys are required —
+Ring runs on the documented Playground simulator and Bedrock perception on a deterministic Mock.
 
-## Demo flow
+## Providers & configuration
 
-Launch a mission → **CEO** plans → **PM** decomposes into tasks → **Developer** builds and requests
-`production.deploy` → **governance returns `approval_required`** and the mission **pauses** → a human
-**approves** → the mission **resumes** and deploys → an unauthorized `customer_database.export` is
-**blocked** and recorded → **QA** finds an issue, Developer fixes it, QA passes → **Finance** reports
-cost → mission **completes** → **evolution runs**: each agent is scored, an improvement is proposed, a
-new agent version is created and (if low-risk) activated or (if high-risk) held for approval.
+With **no keys**, everything runs deterministically (simulator + Mock). Set keys to go live; see
+[`apps/api/.env.example`](apps/api/.env.example).
 
-At any point you can refresh the page — the paused state, the timeline, and the metrics are all
-restored from PostgreSQL. Step-by-step run-of-show: [`docs/demo-flow.md`](docs/demo-flow.md) and
-[`docs/hackathon-demo-checklist.md`](docs/hackathon-demo-checklist.md).
-
-## Provider configuration
-
-The workforce reasons through a single provider abstraction. **With no API keys set, it runs entirely
-on a deterministic `Mock` provider — the demo never depends on an external service.** Set a key to use a
-real model; the primary is always wrapped with a resilient Mock fallback, so a timeout, an error, or
-malformed output degrades to Mock instead of crashing.
-
-Set these in `apps/api/.env` (see `apps/api/.env.example`):
-
-| Variable | Default | Purpose |
+| Capability | Variable(s) | Without a key |
 |---|---|---|
-| `LLM_PROVIDER` | `auto` | `auto` \| `claude` \| `openai` \| `gemini` \| `pioneer` \| `mock`. `auto` picks the first provider with a key (Claude → OpenAI → Gemini → Pioneer), else Mock. |
-| `ANTHROPIC_API_KEY` / `CLAUDE_MODEL` | – / `claude-3-5-sonnet-latest` | Enable Claude. |
-| `OPENAI_API_KEY` / `OPENAI_MODEL` | – / `gpt-4o-mini` | Enable OpenAI. |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` | – / `gemini-2.5-flash` | Enable Gemini. |
-| `PIONEER_KEY` / `PIONEER_MODEL` | – / `gemma` | Enable Pioneer (sponsor) — OpenAI-compatible model routing. |
-| `LLM_TIMEOUT_MS` / `LLM_MAX_RETRIES` | `20000` / `2` | Per-call timeout and retries before Mock fallback. |
+| **Ring** sensing | `RING_PROVIDER`, `RING_CLIENT_ID/SECRET`, `RING_WEBHOOK_SECRET` | Playground **simulator** emits documented, locally-signed events |
+| **Bedrock** perception (AWS Builder) | `PERCEPTION_PROVIDER`, `BEDROCK_MODEL_ID`, `BEDROCK_REGION` (+ boto3 AWS creds) | deterministic **Mock** perceiver |
+| **SwarmOps** authority | — | always deterministic |
 
-**For the hackathon (Gemini):** set `GEMINI_API_KEY=…` and `LLM_PROVIDER=gemini`. Nothing else changes —
-the UI and governance behave identically regardless of provider.
+Provider status is truthful in the UI: green **CONNECTED** only when verified, amber **DEMO_MODE**
+for the simulator/Mock, never a false green.
 
-Other settings: `DATABASE_URL`, `TEST_DATABASE_URL` (both default to a local `swarmops` role on
-`localhost:5432`), `DEMO_EVENT_DELAY_MS` (workflow pacing; `0` = instant, used by tests),
-`CORS_ORIGINS` (defaults to `http://localhost:3000`).
+## Alexa+ MCP
 
-## Sponsor integrations
+A remote **Model Context Protocol** server (spec **2025-11-25**) over **Streamable HTTP** at
+**`POST /mcp`**, exposing eight narrow, typed tools (`get_security_incident`,
+`get_incident_explanation`, `get_allowed_actions`, `propose/approve/reject_security_action`,
+`get_action_status`, `get_incident_timeline`). Alexa+ is an **interface, not the authority** — every
+tool calls the same deterministic officer service; no forged role or "skip approval" can bypass it.
+Development + deployment: [`docs/sentinel/MCP.md`](docs/sentinel/MCP.md).
 
-SwarmOps integrates sponsor technologies through **pluggable provider interfaces**. Each sponsor powers
-one enterprise capability, while the governance layer remains **provider-independent** — no vendor SDK
-touches business logic, every integration is key-gated, and a sponsor outage can never break a mission.
-
-| Capability | Sponsor | Interface |
-|---|---|---|
-| Reasoning / model routing | **Pioneer** | `app/providers/llm/` |
-| Agent-to-agent communication | **Band** | `app/providers/comms/` |
-| Verified context | **Senso** | `app/providers/context/` |
-| Report publishing (real action) | **cited.md** | `app/publishing/` + `app/providers/publish/` |
-| Autonomous QA | **Replay.io** | the dashboard (`apps/web`) |
-
-Because governance, approvals, audit, and evolution sit *above* these runtimes, you can swap any provider
-without changing the guarantees. When configured, the dashboard's **TOOLS** chip and a `sponsors.active`
-event make the integrations visible in-product. Full setup per sponsor:
-[`docs/sponsors.md`](docs/sponsors.md).
-
-**The mission takes a real action.** When a mission finishes and self-evolution has scored the run,
-SwarmOps builds a report **grounded entirely in the Postgres audit trail** — every governance decision
-cites the exact policy it enforced, alongside the human-approval gate, costs, and evolution scores — and
-**publishes it to cited.md** (Senso's endpoint for the agentic web). Without a key the report is still
-generated and served at `GET /api/missions/{id}/report` (dashboard shows a **REPORT** chip); with
-`CITED_API_KEY` it is published and the dashboard shows a **PUBLISHED ↗** chip linking to the live URL.
-Because the report only restates what the audit trail already proves, the published artifact is
-verifiable by construction.
-
-## Screenshots
-
-| Live mission with approval gate | Mission complete + evolution summary |
-|---|---|
-| ![live](docs/img/dashboard-live.png) | ![complete](docs/img/mission-complete.png) |
-
-## Test commands
+## Tests
 
 ```bash
-make test     # full backend suite (69 tests): api, governance, orchestrator, agents, providers, evolution, sponsors
-make lint     # ruff (backend) + eslint (frontend)
-make build    # frontend production build
-make verify   # quick end-to-end happy-path integration test (tests/test_api.py)
+make test    # backend suite (Sentinel domain, Ring, perception, governance, officer, MCP, demo)
+make lint    # ruff (backend) + eslint (frontend)
+make build   # frontend production build
 ```
 
-`make test` uses `TEST_DATABASE_URL` (defaults to `postgresql+psycopg://swarmops@localhost:5432/swarmops_test`,
-the database `make db-create` sets up). To point tests at a different database, `export TEST_DATABASE_URL=…`
-in your shell before running (it is read from the process environment, not from `.env`).
+The suite proves the invariants: no LLM in the authorization path; the 23:42 scene yields a
+deterministic DENY (repeated runs identical); perception output can never create an execution;
+exactly-once execution under retries and concurrency; role/expiry/self-approval enforcement; and a
+guided demo that completes deterministically across consecutive runs.
 
-The suite covers: deterministic governance scenarios; the full pause/approve/reject workflow; SSE
-ordering, `Last-Event-ID` reconnection, and post-completion replay; persistence across fresh clients;
-LLM provider parity and fallback; evolution (evaluation, high-risk approval, activation, rollback); and
-the sponsor integrations — including that an unreachable sponsor can never break a mission, and that the
-published mission report is grounded in the audit trail (`tests/test_sponsors.py`).
+> Tests assume no `.env` (CI has no keys). The repo's real `.env` is gitignored; run the suite with a
+> clean environment.
 
-## Limitations
+## Built on SwarmOps (honest disclosure)
 
-Scoped intentionally for a hackathon demo, not a production deployment:
-
-- **No auth / multi-tenancy / RBAC.** One seeded organization; anyone with the URL can approve.
-- **Self-improvement is data-only.** Agents refine configuration deltas, not their own executable code — by design (see *Why evolution is safe*).
-- **Single-mission demo scope.** One canonical objective drives the scripted-but-real workflow; agent reasoning is live, the governed action set is fixed.
-- **In-process orchestration & SSE fan-out.** No Kafka/Redis/Celery; single API process. Durable events in Postgres are the backstop, but horizontal scale-out is out of scope.
-- **The frontend expects the API at `NEXT_PUBLIC_API_URL`** (default `http://localhost:8000`); set it at build time for any non-local deployment.
-
-## Roadmap
-
-- **Now — Governed AI Workforce.** Deterministic governance, human approvals, full audit, and safe self-evolution for a single AI company (this repo).
-- **Next — Enterprise Workforce Management.** Auth, roles, and multi-tenant authorization; workforce analytics and policy management; approval routing and org-wide audit.
-- **Future — Multi-company AI Workforce Platform.** A governance and analytics plane across many organizations and any underlying agent runtime — the management layer for the internet of agents.
+Sentinel reuses an existing **SwarmOps** governance core (deterministic engine, human-approval flow,
+append-only audit, provider abstraction) originally built for an earlier hackathon; that mission
+workforce app still lives at **`/`** as the governance substrate. The **Sentinel product** — the Ring
+sensing layer, Bedrock perception, the entrance risk/policy, the incident/officer/action engines, the
+Alexa+ MCP server, and the `/sentinel` command screen — is the new work built during the Amazon
+window. The full pre-existing-vs-new breakdown is in
+[`docs/sentinel/HACKATHON_CHANGES.md`](docs/sentinel/HACKATHON_CHANGES.md).
 
 ## Repository layout
 
 ```
-apps/api/   FastAPI + Postgres backend (governance, orchestration, agents, providers, evolution)
-apps/web/   Next.js dashboard (components/ + lib/)
-docs/       architecture · domain-model · api · demo-flow · hackathon-demo-checklist · sponsors · submission
-Makefile    install · db-create · migrate · seed · demo · api · web · lint · test · build · verify
+apps/api/app/sentinel/   ring/ · perception/ · governance/ · officer/ · actions/ + domain models
+apps/api/app/mcp/        Alexa+ Streamable HTTP MCP server
+apps/api/app/api/        FastAPI routers: ring · perception · governance · sentinel (+ missions)
+apps/web/app/sentinel/   the AI Security Officer command screen
+docs/sentinel/           Sentinel specs, architecture, MCP, friction log, disclosure
 ```
+
+## License
+
+MIT — see [`LICENSE`](LICENSE) if present. Built with standard frameworks and AI coding assistants
+as permitted by the hackathon rules.

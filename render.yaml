@@ -1,14 +1,16 @@
-# Render blueprint — SwarmOps backend (FastAPI) + managed Postgres.
+# Render blueprint — Sentinel / SwarmOps backend (FastAPI) + managed Postgres.
 #
 # Deploy: Render Dashboard → New → Blueprint → select this repo → Apply.
 # Render creates the Postgres database, wires DATABASE_URL, runs migrations +
 # (idempotent) seed on start, and serves the API. Copy the service's public
-# https URL — the Vercel frontend points NEXT_PUBLIC_API_URL at it.
+# https URL — the Vercel frontend points NEXT_PUBLIC_API_URL at it, and the
+# Alexa+ MCP server is served at <public-url>/mcp.
 #
-# The backend runs entirely on the deterministic Mock LLM provider, so no API
-# keys are needed and the full demo (governance, approvals, evolution, cited.md
-# report) works out of the box. CORS is open ("*") so the Vercel frontend can
-# reach it; tighten to the exact Vercel origin later if you like.
+# No keys are required: the LLM mission workforce runs on the deterministic Mock
+# provider, Ring runs on the documented Playground simulator (RING_PROVIDER=auto),
+# and Bedrock perception falls back to a deterministic Mock (PERCEPTION_PROVIDER=auto),
+# so the full /sentinel guided demo works out of the box. Add RING_*/BEDROCK_*/AWS_*
+# env vars to go live. CORS is open ("*") for the frontend; tighten later if you like.
 services:
   - type: web
     name: swarmops-api
