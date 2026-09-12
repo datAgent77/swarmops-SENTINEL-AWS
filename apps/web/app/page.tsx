@@ -15,6 +15,7 @@ import { CompletionOverlay } from "./components/CompletionOverlay";
 import { MissionControls } from "./components/MissionControls";
 import { RingStatus } from "./components/RingStatus";
 import { PerceptionPanel } from "./components/PerceptionPanel";
+import { SentinelConsole } from "./components/SentinelConsole";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const DEMO_OBJECTIVE = "Launch a secure AI-powered customer support portal.";
@@ -379,6 +380,8 @@ export default function MissionControl() {
       </header>
 
       <PerceptionPanel />
+
+      <SentinelConsole />
 
       <MetricsRail
         metrics={snapshot?.metrics}
