@@ -34,7 +34,7 @@ suggested improvement · status**.
 - **Status:** Resolved.
 
 ### 2026-09-04 · ring · Demo without a physical device / partner credentials
-- **Task:** Show a real Ring event entering the backend with no device.
+- **Task:** Show a Ring event entering the backend with no device or partner credentials.
 - **Steps:** Look for a hosted event generator; register a webhook.
 - **Expected:** A one-click sandbox event.
 - **Actual:** Live webhooks need partner onboarding (client_id/secret + registered URL).

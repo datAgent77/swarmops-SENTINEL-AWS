@@ -28,7 +28,8 @@ Sentinel is built on top of an existing SwarmOps governance core — see
 Open **`/sentinel`**, press **START DEMO** — a scripted-but-real 23:42 entrance incident:
 
 ```
-23:42  RING       motion ×3 at a closed entrance (real, HMAC-signed events ingested)
+23:42  RING       motion ×3 at a closed entrance (HMAC-signed Ring Playground events,
+                  verified and ingested through the production pipeline)
        BEDROCK    perception → { person_present, prolonged, repeated, confidence } (no authority)
        CONTEXT    building_open=false · expected_visitor=none · access_request=none · credential=none
        RISK       CRITICAL (100/100) — deterministic, no LLM
@@ -39,7 +40,7 @@ Open **`/sentinel`**, press **START DEMO** — a scripted-but-real 23:42 entranc
 
   AI  recommends:  SEND WARNING
   SwarmOps:        HUMAN APPROVAL REQUIRED (role: security)
-       HUMAN       approves (web console or Alexa+)
+       HUMAN       approves (web console or an Alexa+-compatible MCP client)
        EXECUTOR    warning delivered — EXACTLY ONCE
        REPLAY      same request again → DUPLICATE BLOCKED (one execution only)
        AUDIT       full chain recorded, append-only
@@ -123,10 +124,10 @@ With **no keys**, everything runs deterministically (simulator + Mock). Set keys
 Provider status is truthful in the UI: green **CONNECTED** only when verified, amber **DEMO_MODE**
 for the simulator/Mock, never a false green.
 
-## Alexa+ MCP
+## Alexa+ (MCP interface)
 
-A remote **Model Context Protocol** server (spec **2025-11-25**) over **Streamable HTTP** at
-**`POST /mcp`**, exposing eight narrow, typed tools (`get_security_incident`,
+A remote, **Alexa+-compatible Model Context Protocol** server (spec **2025-11-25**) over
+**Streamable HTTP** at **`POST /mcp`**, exposing eight narrow, typed tools (`get_security_incident`,
 `get_incident_explanation`, `get_allowed_actions`, `propose/approve/reject_security_action`,
 `get_action_status`, `get_incident_timeline`). Alexa+ is an **interface, not the authority** — every
 tool calls the same deterministic officer service; no forged role or "skip approval" can bypass it.

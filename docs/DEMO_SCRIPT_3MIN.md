@@ -10,7 +10,7 @@ and action executes against the real backend."*
 |------|-----------|-------------|
 | **0:00–0:15** | The `/sentinel` header: ON DUTY, SaitALCorp Office, ENTRANCE MONITORED. | "Most security cameras just record. The question at a closed door at midnight isn't *was there motion* — it's *what do we do about it, and who's allowed to decide.*" |
 | **0:15–0:35** | Provider row lights up: RING · BEDROCK · SWARMOPS · ALEXA+ MCP. | "Sentinel is an AI security officer. Ring gives it eyes, Amazon Bedrock gives it understanding, SwarmOps gives it boundaries, and a human keeps authority." |
-| **0:35–1:00** | Press **START DEMO**. Timeline fills: 23:42 / 23:44 / 23:47 motion. | "A real, HMAC-signed Ring event enters the backend — three motion events at a closed entrance, correlated into one incident, not three noisy alerts." |
+| **0:35–1:00** | Press **START DEMO**. Timeline fills: 23:42 / 23:44 / 23:47 motion. | "An HMAC-signed Ring Playground event enters the backend through the production verification pipeline — three motion events at a closed entrance, correlated into one incident, not three noisy alerts." |
 | **1:00–1:25** | Incident card + AI OBSERVATION. | "Bedrock reads the scene and returns a *structured observation* — person present, prolonged, repeated. It describes; it has no authority." |
 | **1:25–1:50** | Risk CRITICAL; AI RECOMMENDATION: GRANT TEMPORARY ACCESS. | "The AI even recommends granting temporary access. Here's where every other demo would just… do it." |
 | **1:50–2:05** | Centerpiece flips to **SWARMOPS POLICY — DENIED** + four reasons. | "SwarmOps denies it. Deterministically. Outside hours, no verified visitor, no access request, no credential. The AI *cannot* override this rule." |

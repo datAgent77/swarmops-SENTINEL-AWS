@@ -4,6 +4,13 @@
 **Repo:** https://github.com/datAgent77/swarmops-SENTINEL-AWS · **License:** MIT
 **Demo video script:** [`docs/DEMO_SCRIPT_3MIN.md`](DEMO_SCRIPT_3MIN.md) · **Proof:** [`docs/sentinel/INTEGRATION_PROOF.md`](sentinel/INTEGRATION_PROOF.md)
 
+**Submission hierarchy**
+- **Hero:** Ring AI Security Officer.
+- **Core innovation:** deterministic authority over probabilistic AI (no LLM can authorize an action).
+- **AWS proof:** Amazon Bedrock perception provider.
+- **Human layer:** Alexa+-compatible MCP + human approval.
+- **Open source:** a reusable governed-action pattern, MIT-licensed.
+
 ## Inspiration
 A Ring camera at a closed office at midnight can tell you *there was motion*. It can't tell
 you *what to do about it* — or make sure a machine doesn't do something irreversible on its
@@ -11,13 +18,14 @@ own. We wanted Ring to behave like a real security officer: understand the scene
 risk, follow policy, ask a human when it matters, act, and leave an audit trail.
 
 ## What it does
-Sentinel is an **AI security officer for an entrance**. It ingests real Ring events,
+Sentinel is an **AI security officer for an entrance**. It ingests Ring-format events through
+the official Ring Developer Platform pipeline and Playground simulator,
 correlates a burst into one **incident**, uses **Amazon Bedrock** to produce a structured
 **observation**, computes **deterministic risk**, and runs every action through a
 **deterministic policy**: `ALLOW` / `REQUIRE_APPROVAL` / `DENY`. When the AI recommends
 granting temporary access to a stranger at a closed door, **SwarmOps denies it** — a rule
 the model cannot override. A warning requires a **human approval** (web console or
-**Alexa+** via MCP), then executes **exactly once**. Everything is on an append-only audit
+an **Alexa+-compatible MCP client**), then executes **exactly once**. Everything is on an append-only audit
 trail. Core principle: **intelligence may be probabilistic; authority must be
 deterministic; no LLM may authorize its own action.**
 
@@ -31,7 +39,7 @@ deterministic; no LLM may authorize its own action.**
 - **Authority — SwarmOps**: typed, versioned risk + policy engines (`policy_hash`), no LLM,
   no `eval`. Role-scoped, expiring approvals; idempotency- and concurrency-guarded,
   exactly-once execution.
-- **Human interface — Alexa+ MCP**: a remote MCP server (spec **2025-11-25**) over
+- **Human interface — Alexa+-compatible MCP**: a remote MCP server (spec **2025-11-25**) over
   **Streamable HTTP**, eight narrow typed tools, all calling the same authority.
 - **Frontend** — a `/sentinel` command screen (Next.js) with a guided demo driving real
   endpoints. Backend: FastAPI + PostgreSQL.
@@ -49,7 +57,9 @@ deterministic; no LLM may authorize its own action.**
 ## Accomplishments
 - A believable "AI security officer" where the **hero moment is restraint** — an AI told
   *no* by a deterministic rule, with a human in the loop.
-- Real Ring intake, real Bedrock perception, a real MCP server — all keyless-demoable.
+- Official Ring developer integration path (verified via the Playground simulator), an
+  Amazon Bedrock perception provider, and a working Alexa+-compatible MCP server — all
+  keyless-demoable.
 - **~200 tests** covering the invariants: no-LLM-authorization, deterministic DENY,
   exactly-once, role/expiry/self-approval, adversarial prompts, and failure-mode safety.
 
