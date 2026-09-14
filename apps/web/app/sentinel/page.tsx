@@ -206,19 +206,41 @@ export default function SentinelPage() {
         {/* Pipeline */}
         <Pipeline stage={pipelineStage} />
 
+        {/* Idle: entrance monitor so the officer is visibly "on watch" pre-demo */}
+        {!demo && <EntranceMonitor />}
+
         {demo && (
           <>
-            {/* Incident card */}
-            <section style={card()}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 13, letterSpacing: 1.5, color: C.red, fontWeight: 700 }}>HIGH-RISK ENTRANCE ACTIVITY</div>
+            {/* Incident card + live entrance feed */}
+            <section style={{ ...card(), borderColor: C.red }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13, letterSpacing: 1.5, color: C.red, fontWeight: 800 }}>HIGH-RISK ENTRANCE ACTIVITY</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 6, padding: "2px 8px" }}>AFTER HOURS</span>
+                </div>
                 <div style={{ fontSize: 22, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>23:42</div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginTop: 12 }}>
-                <Fact k="BUILDING" v="CLOSED" tone={C.red} />
-                <Fact k="EXPECTED VISITOR" v="NONE" tone={C.red} />
-                <Fact k="ACCESS REQUEST" v="NONE" tone={C.red} />
-                <Fact k="CREDENTIAL" v="NONE" tone={C.red} />
+
+              <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1fr) 2fr", gap: 12, marginTop: 12 }}>
+                <CameraPanel alert />
+                <div>
+                  <div style={{ fontSize: 13, color: C.text }}>
+                    Motion ×{demo.ring_events.length} · person present · prolonged &amp; repeated activity
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginTop: 12 }}>
+                    <Fact k="BUILDING" v="CLOSED" tone={C.red} />
+                    <Fact k="EXPECTED VISITOR" v="NONE" tone={C.red} />
+                    <Fact k="ACCESS REQUEST" v="NONE" tone={C.red} />
+                    <Fact k="CREDENTIAL" v="NONE" tone={C.red} />
+                  </div>
+                  <div style={{ marginTop: 12, display: "inline-flex", alignItems: "baseline", gap: 8,
+                    padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.red}`, background: "rgba(248,113,113,0.10)" }}>
+                    <span style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim }}>RISK</span>
+                    <span style={{ fontSize: 28, fontWeight: 900, color: C.red, fontVariantNumeric: "tabular-nums" }}>{demo.incident.risk.risk_score}</span>
+                    <span style={{ fontSize: 14, color: C.dim }}>/ 100</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: C.red, marginLeft: 4 }}>{demo.incident.risk.risk_level}</span>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -241,8 +263,13 @@ export default function SentinelPage() {
                   </ul>
                 </div>
               </div>
-              <div style={{ fontSize: 11, color: C.dim, marginTop: 12, textAlign: "center" }}>
-                Deterministic decision — the AI cannot override it.
+              <div style={{ marginTop: 14, textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+                  &ldquo;AI recommended access. Security policy stopped it.&rdquo;
+                </div>
+                <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>
+                  Deterministic decision — the AI cannot override it.
+                </div>
               </div>
             </section>
 
@@ -270,12 +297,12 @@ export default function SentinelPage() {
                 {approval === "approved" && (
                   <>
                     <span style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(52,211,153,0.15)", border: `1px solid ${C.green}`, color: C.green, fontWeight: 800 }}>
-                      ACTION EXECUTED
+                      WARNING SENT — EXACTLY ONCE ✓
                     </span>
                     <button onClick={replay} disabled={busy} style={ghostBtn(busy)}>Replay the exact same request</button>
                     {duplicate === true && (
                       <span style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(251,191,36,0.15)", border: `1px solid ${C.amber}`, color: C.amber, fontWeight: 800 }}>
-                        DUPLICATE BLOCKED · EXECUTED EXACTLY ONCE
+                        Replay attempted → DUPLICATE BLOCKED
                       </span>
                     )}
                   </>
@@ -313,6 +340,62 @@ export default function SentinelPage() {
 }
 
 // ---- small components ------------------------------------------------------
+function CameraPanel({ alert = false }: { alert?: boolean }) {
+  const accent = alert ? C.red : C.teal;
+  return (
+    <div style={{ position: "relative", borderRadius: 12, border: `1px solid ${alert ? C.red : C.edge}`,
+      background: "linear-gradient(160deg,#0c1424,#070d18)", minHeight: 150, overflow: "hidden",
+      display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 12 }}>
+      {/* corner brackets */}
+      {[0, 1, 2, 3].map((i) => (
+        <span key={i} aria-hidden style={{
+          position: "absolute", width: 16, height: 16,
+          borderTop: i < 2 ? `2px solid ${accent}` : "none",
+          borderBottom: i >= 2 ? `2px solid ${accent}` : "none",
+          borderLeft: i % 2 === 0 ? `2px solid ${accent}` : "none",
+          borderRight: i % 2 === 1 ? `2px solid ${accent}` : "none",
+          top: i < 2 ? 10 : "auto", bottom: i >= 2 ? 10 : "auto",
+          left: i % 2 === 0 ? 10 : "auto", right: i % 2 === 1 ? 10 : "auto", opacity: 0.8 }} />
+      ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 11, letterSpacing: 1.5, color: C.dim }}>FRONT ENTRANCE</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: accent }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: accent, boxShadow: `0 0 8px ${accent}` }} />
+          {alert ? "INCIDENT" : "LIVE"}
+        </span>
+      </div>
+      <div style={{ textAlign: "center", color: C.dim, fontSize: 12 }}>
+        {alert ? "person detected · low light" : "no motion"}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.dim, fontVariantNumeric: "tabular-nums" }}>
+        <span>ring-front-door</span>
+        <span>simulator</span>
+      </div>
+    </div>
+  );
+}
+
+function EntranceMonitor() {
+  return (
+    <section style={{ ...card(), marginTop: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(240px, 1fr) 1fr", gap: 14 }}>
+        <CameraPanel />
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 8 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: C.green, boxShadow: `0 0 10px ${C.green}` }} />
+            <span style={{ fontWeight: 800, color: C.green, letterSpacing: 0.5 }}>MONITORING ENTRANCE</span>
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>No active incident</div>
+          <div style={{ fontSize: 13, color: C.dim }}>
+            Ring feed connected (simulator). Bedrock, SwarmOps policy, and human approval are on standby.
+            Press <b style={{ color: C.teal }}>START DEMO</b> to replay a real after-hours entrance incident.
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Fact({ k, v, tone }: { k: string; v: string; tone: string }) {
   return (
     <div style={{ background: "#0d1526", border: `1px solid ${C.edge}`, borderRadius: 8, padding: "10px 12px" }}>
