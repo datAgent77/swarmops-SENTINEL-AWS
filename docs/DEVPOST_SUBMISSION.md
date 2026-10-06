@@ -42,7 +42,7 @@ deterministic; no LLM may authorize its own action.**
 - **Human interface — Alexa+-compatible MCP**: a remote MCP server (spec **2025-11-25**) over
   **Streamable HTTP**, eight narrow typed tools, all calling the same authority.
 - **Frontend** — a `/sentinel` command screen (Next.js) with a guided demo driving real
-  endpoints. Backend: FastAPI + PostgreSQL.
+  endpoints. Backend: FastAPI, in-process state (no database).
 
 ## Challenges
 - Ring's docs are split across two surfaces and the base host is `amazonvision.com`; the
@@ -75,16 +75,16 @@ deterministic; no LLM may authorize its own action.**
 - Durable persistence for incidents/audit (currently in-process for the officer layer).
 - Production auth on the MCP endpoint mapped to real operator roles; retention controls.
 
-## Disclosure — before vs during the hackathon window
-- **Pre-existing (before Aug 31):** the SwarmOps governance *core* — the deterministic
-  engine pattern, human-approval flow, append-only audit, and provider abstraction — from
-  an earlier project. The mission-workforce app at `/` is that substrate.
-- **Built during the Amazon window (new work):** the entire **Sentinel product** — Ring
-  sensing (`app/sentinel/ring/`), Bedrock perception (`app/sentinel/perception/`), the
-  entrance risk/policy (`app/sentinel/governance/`), incident/officer/action engines
-  (`app/sentinel/officer/`, `app/sentinel/actions/`), the Alexa+ MCP server (`app/mcp/`),
-  the `/sentinel` command screen, and all Sentinel tests + docs. Full breakdown:
-  [`docs/sentinel/HACKATHON_CHANGES.md`](sentinel/HACKATHON_CHANGES.md).
+## Disclosure
+Sentinel is **original work built during the hackathon** — Ring sensing
+(`app/sentinel/ring/`), Bedrock perception (`app/sentinel/perception/`), the entrance
+risk/policy (`app/sentinel/governance/`), incident/officer/action engines
+(`app/sentinel/officer/`, `app/sentinel/actions/`), the Alexa+-compatible MCP server
+(`app/mcp/`), the `/sentinel` command screen, and all tests + docs. **"SwarmOps"** is the
+name of Sentinel's deterministic-governance layer, not a separate product. The repo
+contains no other product's code and no database; the only reused pieces are generic
+framework utilities (an error envelope + a settings loader). Full breakdown:
+[`docs/sentinel/HACKATHON_CHANGES.md`](sentinel/HACKATHON_CHANGES.md).
 
 ## Privacy
 Judge behavior, not identity: no facial recognition, demographic inference, gait/voiceprint

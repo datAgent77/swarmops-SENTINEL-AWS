@@ -1,8 +1,8 @@
 import "./styles.css";
 
 export const metadata = {
-  title: "SwarmOps — Living AI Workforce",
-  description: "Real-time control plane for an autonomous AI workforce under deterministic governance.",
+  title: "Sentinel — AI Security Officer for Ring",
+  description: "Ring + Amazon Bedrock, governed by SwarmOps. An AI security officer that understands, follows policy, and asks for human approval.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

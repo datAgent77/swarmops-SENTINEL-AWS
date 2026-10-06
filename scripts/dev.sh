@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Start the SwarmOps API (:8000) and web (:3000) together for a live demo.
-# Ctrl-C stops both. Run from the repository root (or via `make demo`).
+# Start the Sentinel API (:8000) and web (:3000) together for a live demo.
+# Ctrl-C stops both. Run from the repository root (or via `make dev`).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -9,14 +9,14 @@ WEB="$ROOT/apps/web"
 
 cleanup() {
   echo ""
-  echo "Stopping SwarmOps…"
+  echo "Stopping Sentinel…"
   [[ -n "${API_PID:-}" ]] && kill "$API_PID" 2>/dev/null || true
   [[ -n "${WEB_PID:-}" ]] && kill "$WEB_PID" 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
 
 echo "Starting API on http://localhost:8000 …"
-( cd "$API" && . .venv/bin/activate && exec uvicorn app.main:app --port 8000 ) &
+( cd "$API" && exec .venv/bin/uvicorn app.main:app --port 8000 ) &
 API_PID=$!
 
 # Wait for the API to answer /health before starting the web server.
@@ -33,6 +33,6 @@ echo "Starting web on http://localhost:3000 …"
 WEB_PID=$!
 
 echo ""
-echo "SwarmOps is running:  API → http://localhost:8000   UI → http://localhost:3000"
-echo "Open http://localhost:3000 and click 'Run demo mission'.  Press Ctrl-C to stop."
+echo "Sentinel is running:  API → http://localhost:8000   UI → http://localhost:3000/sentinel"
+echo "Open http://localhost:3000/sentinel and press 'START DEMO'.  Press Ctrl-C to stop."
 wait

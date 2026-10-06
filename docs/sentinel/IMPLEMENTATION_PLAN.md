@@ -1,5 +1,10 @@
 # IMPLEMENTATION_PLAN — Sentinel
 
+> **As-built note:** this is the original phased plan. Some planned file paths and the
+> "add a migration" steps were superseded — Sentinel shipped standalone under
+> `app/sentinel/*` with **in-process state and no database**.
+
+
 Phased plan. Each phase ends **green** (pytest + ruff + web eslint/build) and
 leaves the demo runnable. Reuse the deterministic governance/approval/audit core;
 build the Ring → Bedrock → incident pipeline and the officer-shift UI on top.
@@ -28,7 +33,7 @@ build the Ring → Bedrock → incident pipeline and the officer-shift UI on top
   `Detected → Assessed → Escalated → Approved/Denied → Actioned → Closed`.
 - Domain enums + schemas for incidents.
 - Unit tests for lifecycle transitions.
-- **Exit:** new domain/migration tests green; no infra beyond Postgres touched.
+- **Exit:** new domain tests green; no external infra (in-process state).
 
 ### P02 — Governance extension + entrance context
 - Extend `governance/engine.py` with deterministic entrance scenarios:

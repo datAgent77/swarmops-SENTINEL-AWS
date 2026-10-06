@@ -20,8 +20,8 @@ retains authority over consequential actions.
 > audit trail.
 
 Built for the **Build, Ship, Shape: Amazon Developer Hackathon** (Ring track + AWS Builder).
-Sentinel is built on top of an existing SwarmOps governance core — see
-[Provenance](#built-on-swarmops-honest-disclosure).
+"SwarmOps" is the name of Sentinel's deterministic-governance layer — see
+[Provenance](#provenance-honest-disclosure).
 
 ## The winner moment
 
@@ -99,12 +99,11 @@ card, the officer pipeline (OBSERVE → UNDERSTAND → ASSESS+AUTHORIZE → APPR
 ## Quick start
 
 ```bash
-# Prerequisites: Python 3.11, Node 20+, PostgreSQL running locally.
+# Prerequisites: Python 3.11, Node 20+. No database — state is in-process.
 make install      # backend venv + deps, frontend deps
-make db-create    # create the swarmops role + swarmops / swarmops_test databases
-make demo         # migrate + seed
 make api          # terminal 1 → FastAPI on http://localhost:8000
 make web          # terminal 2 → Next.js on http://localhost:3000
+# or: make dev    # runs both together (Ctrl-C stops both)
 ```
 
 Then open **http://localhost:3000/sentinel** and press **START DEMO**. No API keys are required —
@@ -146,8 +145,8 @@ deterministic DENY (repeated runs identical); perception output can never create
 exactly-once execution under retries and concurrency; role/expiry/self-approval enforcement; and a
 guided demo that completes deterministically across consecutive runs.
 
-> Tests assume no `.env` (CI has no keys). The repo's real `.env` is gitignored; run the suite with a
-> clean environment.
+> The suite needs no database and no keys. The repo's real `.env` is gitignored; only
+> `.env.example` is tracked.
 
 ## Security
 
@@ -175,8 +174,9 @@ record (only a structured observation + a SHA-256 of the raw payload is kept). F
   not expose it; `GRANT_TEMPORARY_ACCESS` stays a governed, default-denied recommendation.
 - Live Ring events need partner credentials; the keyless demo uses the documented Playground
   simulator. Live Bedrock needs AWS creds + a model id; otherwise a deterministic Mock runs.
-- The officer/incident state is **in-process** (durable persistence is a follow-up); the
-  authority semantics (deterministic policy, roles, expiry, exactly-once, audit) are enforced.
+- The officer/incident state is **in-process by design** (no database); durable persistence is an
+  optional follow-up. The authority semantics (deterministic policy, roles, expiry, exactly-once,
+  audit) are fully enforced.
 - MCP production auth (bearer/OAuth → operator role) is a documented follow-up.
 
 ## Submission docs
@@ -186,27 +186,27 @@ record (only a structured observation + a SHA-256 of the raw payload is kept). F
 - Integration proof (Ring · Bedrock · Alexa+) — [`docs/sentinel/INTEGRATION_PROOF.md`](docs/sentinel/INTEGRATION_PROOF.md)
 - Friction log — [`docs/sentinel/FRICTION_LOG.md`](docs/sentinel/FRICTION_LOG.md)
 
-## Built on SwarmOps (honest disclosure)
+## Provenance (honest disclosure)
 
-Sentinel reuses an existing **SwarmOps** governance core (deterministic engine, human-approval flow,
-append-only audit, provider abstraction) originally built for an earlier hackathon; that mission
-workforce app still lives at **`/`** as the governance substrate. The **Sentinel product** — the Ring
-sensing layer, Bedrock perception, the entrance risk/policy, the incident/officer/action engines, the
-Alexa+ MCP server, and the `/sentinel` command screen — is the new work built during the Amazon
-window. The full pre-existing-vs-new breakdown is in
+Sentinel is **original work built for this hackathon** — the Ring sensing layer, the Bedrock
+perception layer, the deterministic entrance risk/policy, the incident/officer/action engines, the
+Alexa+-compatible MCP server, and the `/sentinel` command screen. **"SwarmOps"** is the name of
+Sentinel's deterministic-governance layer (`app/sentinel/governance`), not a separate product bundled
+in. The repository contains no other product's code and no database. The only reused pieces are
+generic framework utilities (an error envelope and a settings loader). Breakdown:
 [`docs/sentinel/HACKATHON_CHANGES.md`](docs/sentinel/HACKATHON_CHANGES.md).
 
 ## Repository layout
 
 ```
 apps/api/app/sentinel/   ring/ · perception/ · governance/ · officer/ · actions/ + domain models
-apps/api/app/mcp/        Alexa+ Streamable HTTP MCP server
-apps/api/app/api/        FastAPI routers: ring · perception · governance · sentinel (+ missions)
+apps/api/app/mcp/        Alexa+-compatible Streamable HTTP MCP server
+apps/api/app/api/        FastAPI routers: ring · perception · governance · sentinel
 apps/web/app/sentinel/   the AI Security Officer command screen
 docs/sentinel/           Sentinel specs, architecture, MCP, friction log, disclosure
 ```
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE) if present. Built with standard frameworks and AI coding assistants
-as permitted by the hackathon rules.
+MIT — see [`LICENSE`](LICENSE). Built with standard frameworks and AI coding assistants as permitted
+by the hackathon rules.

@@ -68,7 +68,7 @@ OBSERVE → UNDERSTAND → ASSESS → DECIDE → ESCALATE → ACT → RECORD
 ```
 
 Realized as the **incident lifecycle** (a state machine in the style of the
-existing `app/orchestration/state_machine.py`):
+`app/sentinel/lifecycle.py`):
 
 ```
 Detected → Assessed → Escalated → Approved / Denied → Actioned → Closed

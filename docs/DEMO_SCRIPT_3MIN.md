@@ -20,7 +20,7 @@ and action executes against the real backend."*
 | **2:52–3:00** | Closing card. | *"Ring gave AI eyes. Bedrock gave it understanding. SwarmOps gave it boundaries. Sentinel turns all three into an AI security officer you can trust."* |
 
 ## Reproduce it yourself
-- `make install && make db-create && make demo`, then `make api` and `make web`.
+- `make install`, then `make api` and `make web` (or `make dev` for both). No database.
 - Open `/sentinel`, **START DEMO**, **APPROVE**, **Replay**.
 - Or headless: `POST /api/sentinel/demo/start` → `POST /api/sentinel/approve` → `POST /api/sentinel/propose` (same `action_request_id`) → `GET /api/sentinel/timeline`.
 

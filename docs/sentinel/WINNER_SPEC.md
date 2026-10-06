@@ -46,7 +46,7 @@ Scene: **SaitALCorp office entrance, 23:42, building CLOSED.**
        HUMAN          approves  (web console or Alexa+)
        EXECUTOR       warning delivered — EXACTLY ONCE (idempotency-guarded)
        ESCALATION     security team notified
-       AUDIT          full chain persisted to Postgres, append-only, seq-ordered
+       AUDIT          full chain recorded, append-only, in-process
        INCIDENT       Detected → Assessed → Escalated → Approved → Actioned → Closed
 ```
 
@@ -61,22 +61,21 @@ Scene: **SaitALCorp office entrance, 23:42, building CLOSED.**
 4. **"It did the action once, and I can see every step."** (Exactly-once +
    append-only audit stream.)
 
-## Hard invariants this scene proves (already enforced in the base code)
+## Hard invariants this scene proves (enforced in code)
 
 - **Intelligence may be probabilistic. Authority must be deterministic.** Bedrock
-  produces *observations*; `app/governance/engine.py` decides. The engine is a
-  pure function — no I/O, no randomness, no time dependence (verified P00).
-- **No LLM in the authorization path.** `AgentRunner` explicitly makes no
-  governance decision; the orchestrator routes requested tools through
-  `GovernanceEngine.evaluate` (verified P00, `app/agents/agent.py` +
-  `app/orchestration/workflow.py`).
-- **Consequential actions genuinely pause for a human.** The workflow awaits an
-  asyncio event resumed only by a real approve/reject API call
-  (`app/orchestration/coordinator.py`, `app/services/approval_service.py`);
-  double-resolution returns `ConflictError` (idempotent).
-- **Everything is auditable.** Append-only `events` table with a global `seq`,
-  replayable over SSE with `Last-Event-ID` (`app/db/models.py::Event`,
-  `app/api/stream.py`).
+  produces *observations*; `app/sentinel/governance/policy.py` + `risk.py` decide.
+  The engines are pure functions — no LLM, no `eval`, no randomness.
+- **No LLM in the authorization path.** Perception output is rejected if it carries
+  any authority field (`app/sentinel/perception/parse.py`); the decision is the
+  deterministic policy engine's, and the AI recommendation is only an input.
+- **Consequential actions require a human with the right role.** Role is resolved
+  server-side; the proposer cannot self-approve; approvals expire
+  (`app/sentinel/officer/service.py`).
+- **Exactly-once execution.** The idempotency- and concurrency-guarded engine
+  (`app/sentinel/actions/engine.py`) never runs a key twice.
+- **Everything is auditable.** Append-only, in-process incident timeline with
+  trace/idempotency/policy metadata (`app/sentinel/officer/service.py`).
 
 ## Non-negotiables for the recording
 

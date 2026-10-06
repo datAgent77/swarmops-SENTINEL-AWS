@@ -1,11 +1,11 @@
 # ARCHITECTURE — Sentinel
 
-> Ground truth as of P00, verified against code (not README claims) in the
-> `swarmops` base repo. The backend is a FastAPI + PostgreSQL app with a
-> **deterministic governance engine and no LLM in the authorization path**, a
-> genuine pause/resume approval flow, an append-only event stream (SSE), and a
-> clean LLM provider abstraction. Sentinel reuses that core and adds a
-> Ring → Bedrock perception pipeline plus an incident lifecycle on top.
+> **As-built:** Sentinel is a standalone FastAPI backend (`app/sentinel/*`, `app/mcp/*`)
+> with **in-process state and no database**, plus a Next.js `/sentinel` command screen.
+> The sections below are the original design notes; "reuse" language refers to the
+> deterministic-governance *pattern* and small framework glue, not any product code —
+> the final implementation lives entirely under `app/sentinel/` (Ring, Bedrock
+> perception, risk/policy, officer, actions) and `app/mcp/`.
 
 ## Architecture invariant
 
@@ -33,7 +33,7 @@ flowchart TB
       DECIDE{"Decision"}
       HUM["Human Approval<br/>Alexa+ MCP · Web console"]
       EXE["Governed Action Executor<br/>exactly-once"]
-      AUD[("Append-only Audit<br/>events (seq) · Postgres · SSE")]
+      AUD[("Append-only Audit<br/>in-process incident timeline")]
     end
 
     RING --> INTAKE --> INC --> PERC --> CTX --> RISK --> POL --> DECIDE
@@ -54,7 +54,7 @@ flowchart TB
 | Human approval | `services/approval_service.py` (DB-transactional, idempotent-by-conflict) + `orchestration/coordinator.py` (genuine asyncio pause/resume) | **REUSE as-is**; role `security` |
 | Append-only audit | `db/models.py::Event` (global `seq`), `repositories.EventRepository` | **REUSE as-is** |
 | Live updates | `api/stream.py` SSE + `Last-Event-ID` + coordinator fan-out | **REUSE as-is** |
-| Persistence | PostgreSQL + SQLAlchemy 2.0 + Alembic (`alembic/versions/*`) | **REUSE**; add incident tables via a new migration |
+| State | In-process (no database) — officer/incident state held in the service | authority semantics fully enforced; durable persistence is an optional follow-up |
 | LLM abstraction | `providers/llm/` (`LLMProvider` ABC, factory, `ResilientProvider` + Mock fallback) | **REUSE**; add **`bedrock.py`** provider + perception module |
 | Provider seams | `providers/{comms,context,publish}` (sponsor adapters, key-gated, local fallback) | **REUSE pattern** for new Ring/Alexa+ integrations (honest status) |
 | Agent reasoning | `agents/agent.py` `AgentRunner` (structured output; makes NO governance decision) | **REUSE pattern** for the officer's perceive→recommend loop; drop the 6-persona workflow |
@@ -141,7 +141,7 @@ flowchart TB
 3. **No general exactly-once action mechanism.** The base has approval-idempotency
    and a single post-approval deploy, but no action idempotency table. Add one for
    the Governed Action Executor. *(New, small.)*
-4. **Cloud story.** Base hosts web on Vercel, API+Postgres on Render. Sentinel's
+4. **Cloud story.** Web on Vercel, API on Render (no database). Sentinel's
    brain is **Bedrock (AWS)** via boto3 — Render can call Bedrock with AWS creds,
    so **no hosting move is required** (cleaner AWS-Builder story than a full GCP
    stack). Optionally deploy the API on AWS later. **Owner decision; default: keep

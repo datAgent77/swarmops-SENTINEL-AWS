@@ -2,9 +2,6 @@ fastapi[standard]>=0.115
 pydantic>=2.9
 pydantic-settings>=2.5
 python-dotenv>=1.0
-SQLAlchemy>=2.0
-alembic>=1.13
-psycopg[binary]>=3.2
-# Sentinel P03 — Amazon Bedrock perception (optional at runtime; the provider falls
-# back to a deterministic Mock when AWS is not configured).
+# Amazon Bedrock perception (AWS Builder). Optional at runtime: the provider falls
+# back to a deterministic Mock when AWS is not configured.
 boto3>=1.35

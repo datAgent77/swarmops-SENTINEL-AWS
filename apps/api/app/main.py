@@ -1,18 +1,23 @@
-"""SwarmOps API — thin HTTP surface. All logic lives in services and repositories."""
+"""Sentinel API — AI Security Officer for Ring.
+
+Thin HTTP surface over the Sentinel engines (Ring sensing, Bedrock perception,
+deterministic governance, the officer service, and the Alexa+ MCP server). All
+authority and state live in the services; this module only wires routers.
+"""
 
 from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import approvals, evolution, governance, missions, perception, ring, sentinel, stream
+from app.api import governance, perception, ring, sentinel
 from app.api.errors import register_error_handlers
 from app.config import get_settings
 from app.mcp import server as mcp_server
 
 settings = get_settings()
 
-app = FastAPI(title="SwarmOps API", version="0.3.0")
+app = FastAPI(title="Sentinel API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -22,10 +27,6 @@ app.add_middleware(
 )
 
 register_error_handlers(app)
-app.include_router(missions.router)
-app.include_router(approvals.router)
-app.include_router(stream.router)
-app.include_router(evolution.router)
 app.include_router(ring.router)
 app.include_router(perception.router)
 app.include_router(governance.router)

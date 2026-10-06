@@ -1,4 +1,9 @@
-"""Application settings, loaded from environment with safe local defaults."""
+"""Application settings for Sentinel, loaded from the environment / .env.
+
+Sentinel's authoritative state is in-process, so there is no database. Ring and
+Bedrock are both optional: with no keys, Ring runs on the documented Playground
+simulator and Bedrock perception falls back to a deterministic Mock.
+"""
 
 from __future__ import annotations
 
@@ -12,15 +17,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Postgres is the source of truth. Sync psycopg driver (FastAPI runs sync
-    # route handlers in a threadpool, so this does not block the event loop).
-    database_url: str = Field(
-        default="postgresql+psycopg://swarmops@127.0.0.1:5432/swarmops",
-        alias="DATABASE_URL",
-    )
-
-    # Centralized demo pacing. Shorten before a live presentation via env.
-    demo_event_delay_ms: int = Field(default=650, alias="DEMO_EVENT_DELAY_MS")
+    app_env: str = Field(default="development", alias="APP_ENV")
 
     # CORS is restricted to configured frontend origins. NoDecode disables
     # pydantic-settings' JSON parsing so a plain comma-separated env value works
@@ -29,52 +26,9 @@ class Settings(BaseSettings):
         default=["http://localhost:3000"], alias="CORS_ORIGINS"
     )
 
-    app_env: str = Field(default="development", alias="APP_ENV")
-
-    # --- LLM / agents (Sprint 2) ------------------------------------------
-    # "auto" picks the first provider whose API key is configured (Claude, then
-    # OpenAI, then Gemini), otherwise the deterministic Mock provider. Force one
-    # with "claude" | "openai" | "gemini" | "mock".
-    llm_provider: str = Field(default="auto", alias="LLM_PROVIDER")
-    llm_timeout_ms: int = Field(default=20000, alias="LLM_TIMEOUT_MS")
-    llm_max_retries: int = Field(default=2, alias="LLM_MAX_RETRIES")
-
-    gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-2.5-flash", alias="GEMINI_MODEL")
-    anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
-    claude_model: str = Field(default="claude-3-5-sonnet-latest", alias="CLAUDE_MODEL")
-    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
-    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
-
-    # --- Sponsor integrations (all optional; each degrades to a local no-op /
-    #     Mock fallback when its key is absent, so the demo never depends on one).
-    # Pioneer (Fastino) — OpenAI-compatible model routing / adaptive inference.
-    pioneer_api_key: str | None = Field(default=None, alias="PIONEER_KEY")
-    pioneer_model: str = Field(default="gemma", alias="PIONEER_MODEL")
-    pioneer_base_url: str = Field(default="https://api.pioneer.ai/v1", alias="PIONEER_BASE_URL")
-    pioneer_adaptive: bool = Field(default=True, alias="PIONEER_ADAPTIVE")
-
-    # Band — communication layer for AI agents (inter-agent messages mirrored to
-    # a Band room via its REST Agent API).
-    band_api_key: str | None = Field(default=None, alias="BAND_API_KEY")
-    band_agent_id: str | None = Field(default=None, alias="BAND_AGENT_ID")
-    band_base_url: str = Field(default="https://app.band.ai/api/v1", alias="BAND_BASE_URL")
-    band_chat_id: str | None = Field(default=None, alias="BAND_CHAT_ID")
-
-    # Senso — context layer for AI agents (ingest mission artifacts, retrieve
-    # verified context). Base URL is configurable per the Senso API reference.
-    senso_api_key: str | None = Field(default=None, alias="SENSO_API_KEY")
-    senso_base_url: str = Field(default="https://api.senso.ai/v1", alias="SENSO_BASE_URL")
-
-    # cited.md (Senso) — publish the mission report to the agentic web (real
-    # action). Optional; without a key the report is generated and served locally.
-    cited_api_key: str | None = Field(default=None, alias="CITED_API_KEY")
-    cited_base_url: str = Field(default="https://cited.md/api", alias="CITED_BASE_URL")
-
-    # --- Ring sensing layer (Sentinel P02) --------------------------------
-    # Provider: "auto" (developer if configured, else simulator) | "developer" |
-    # "simulator" | "mock". The simulator emits documented, locally-signed Ring
-    # events so the demo needs no real Ring credentials.
+    # --- Ring sensing layer ------------------------------------------------
+    # Provider: "auto" (developer if configured, else simulator) | "developer"
+    # | "simulator" | "mock".
     ring_provider: str = Field(default="auto", alias="RING_PROVIDER")
     ring_client_id: str | None = Field(default=None, alias="RING_CLIENT_ID")
     ring_client_secret: str | None = Field(default=None, alias="RING_CLIENT_SECRET")
@@ -82,7 +36,7 @@ class Settings(BaseSettings):
     ring_access_token: str | None = Field(default=None, alias="RING_ACCESS_TOKEN")
     ring_api_base: str = Field(default="https://api.amazonvision.com", alias="RING_API_BASE")
 
-    # --- Bedrock perception layer (Sentinel P03, AWS Builder) --------------
+    # --- Bedrock perception layer (AWS Builder) ----------------------------
     # Provider: "auto" (Bedrock if configured, else deterministic Mock) | "bedrock"
     # | "mock". AWS credentials come from the standard boto3 chain (env/role).
     perception_provider: str = Field(default="auto", alias="PERCEPTION_PROVIDER")
@@ -105,39 +59,6 @@ class Settings(BaseSettings):
                     pass
             return [origin.strip() for origin in text.split(",") if origin.strip()]
         return value
-
-    @field_validator("database_url", mode="before")
-    @classmethod
-    def _normalize_db_url(cls, value: object) -> object:
-        # Managed Postgres providers (Render, Railway, Heroku) hand out a bare
-        # "postgres://" / "postgresql://" URL. We use the psycopg (v3) driver, so
-        # rewrite the scheme to "postgresql+psycopg://" unless a driver is set.
-        if isinstance(value, str):
-            text = value.strip()
-            if text.startswith("postgres://"):
-                text = "postgresql://" + text[len("postgres://") :]
-            if text.startswith("postgresql://"):
-                text = "postgresql+psycopg://" + text[len("postgresql://") :]
-            return text
-        return value
-
-    @property
-    def demo_event_delay_seconds(self) -> float:
-        return max(0.0, self.demo_event_delay_ms / 1000.0)
-
-    def active_sponsors(self) -> list[str]:
-        """Which sponsor integrations are configured (reflects real env keys —
-        no secrets, just names). Drives the dashboard's "tools in use" indicator."""
-        names: list[str] = []
-        if self.pioneer_api_key or self.llm_provider == "pioneer":
-            names.append("pioneer")
-        if self.band_api_key:
-            names.append("band")
-        if self.senso_api_key:
-            names.append("senso")
-        if self.cited_api_key:
-            names.append("cited")
-        return names
 
 
 @lru_cache
