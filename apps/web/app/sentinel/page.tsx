@@ -290,7 +290,14 @@ export default function SentinelPage() {
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim }}>SWARMOPS</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: C.amber }}>HUMAN APPROVAL REQUIRED</div>
+                  <div style={{ fontSize: 16, fontWeight: 800,
+                    color: approval === "approved" ? C.green : approval === "rejected" ? C.red : C.amber }}>
+                    {approval === "approved"
+                      ? "APPROVED & EXECUTED ✓"
+                      : approval === "rejected"
+                        ? "REJECTED"
+                        : "HUMAN APPROVAL REQUIRED"}
+                  </div>
                 </div>
               </div>
 
