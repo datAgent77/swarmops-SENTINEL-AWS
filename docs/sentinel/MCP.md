@@ -63,9 +63,9 @@ secrets in the URL.
   (see `render.yaml`); the public base URL exposes `/mcp` directly — no separate
   service required.
 - Put the server behind HTTPS (Render provides TLS).
-- **Secrets:** none are hardcoded. Ring, Bedrock (AWS), and DB credentials come
-  from environment variables / the platform secret store (`RING_*`, `BEDROCK_*`,
-  `AWS_*`, `DATABASE_URL`). `.env` is gitignored.
+- **Secrets:** none are hardcoded. Ring and Bedrock (AWS) credentials come from
+  environment variables / the platform secret store (`RING_*`, `BEDROCK_*`,
+  `AWS_*`). `.env` is gitignored. There is no database.
 - **Auth (production):** front the endpoint with a bearer token / OAuth resource
   server and map the authenticated principal to an actor id + role in the
   `ActorRegistry`. In the hackathon build the actor registry is seeded for the demo;

@@ -1,9 +1,8 @@
 """Sentinel domain enumerations.
 
-Deliberately separate from ``app.domain.enums`` (mission/workforce vocabulary):
 Sentinel speaks in locations, devices, events, incidents, observations, and
 security actions. All are string-valued so they serialize cleanly across the
-database, the API, and the UI.
+API and the UI.
 """
 
 from __future__ import annotations

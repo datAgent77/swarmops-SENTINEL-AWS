@@ -45,67 +45,37 @@ flowchart TB
     PERC --> AUD
 ```
 
-## Layer mapping: swarmops today → Sentinel
+## As-built layers
 
-| Concern | Existing code (verified P00) | Sentinel disposition |
-|---|---|---|
-| Deterministic policy | `governance/engine.py` (pure fn; Scenarios A–E; `DecisionResult` ALLOW/BLOCK/APPROVAL_REQUIRED; stable `policy_id`+`risk_score`) | **REUSE + EXTEND** with entrance scenarios (grant/warn/notify). Keep pure-function contract |
-| Lifecycle state machine | `orchestration/state_machine.py` (explicit `ALLOWED` transition map; terminal states) | **REUSE pattern**; add incident-lifecycle transition table |
-| Human approval | `services/approval_service.py` (DB-transactional, idempotent-by-conflict) + `orchestration/coordinator.py` (genuine asyncio pause/resume) | **REUSE as-is**; role `security` |
-| Append-only audit | `db/models.py::Event` (global `seq`), `repositories.EventRepository` | **REUSE as-is** |
-| Live updates | `api/stream.py` SSE + `Last-Event-ID` + coordinator fan-out | **REUSE as-is** |
-| State | In-process (no database) — officer/incident state held in the service | authority semantics fully enforced; durable persistence is an optional follow-up |
-| LLM abstraction | `providers/llm/` (`LLMProvider` ABC, factory, `ResilientProvider` + Mock fallback) | **REUSE**; add **`bedrock.py`** provider + perception module |
-| Provider seams | `providers/{comms,context,publish}` (sponsor adapters, key-gated, local fallback) | **REUSE pattern** for new Ring/Alexa+ integrations (honest status) |
-| Agent reasoning | `agents/agent.py` `AgentRunner` (structured output; makes NO governance decision) | **REUSE pattern** for the officer's perceive→recommend loop; drop the 6-persona workflow |
-| 6-agent mission workflow | `orchestration/workflow.py` (CEO/PM/Dev/Sec/QA/Finance dance) | **DO NOT reuse** the persona choreography; build a focused incident workflow reusing the governance/approval/audit calls |
-| Self-evolution | `evolution/*` | **Optional**; keep working, not central to Sentinel |
-| Cost tracking | `providers/llm/pricing.py`, `CostRecord` | Reuse if useful (Bedrock cost) |
+| Concern | Where |
+|---|---|
+| Ring sensing | `app/sentinel/ring/` — HMAC-verified webhooks, Playground simulator, normalize, dedupe, media/live-view adapters, ingest |
+| Bedrock perception | `app/sentinel/perception/` — boto3 Converse → strict-JSON observation; deterministic Mock fallback |
+| Deterministic risk + policy | `app/sentinel/governance/` — typed, versioned (`config.py`); pure functions, no LLM, no `eval` |
+| Incident domain + lifecycle | `app/sentinel/{models,enums,lifecycle,logic}.py` |
+| Officer + approvals + audit | `app/sentinel/officer/service.py` — role-scoped, expiring approvals; append-only in-process timeline |
+| Governed action execution | `app/sentinel/actions/` — provider + idempotency/concurrency-guarded engine (exactly-once) |
+| HTTP surface | `app/api/{ring,perception,governance,sentinel}.py` |
+| Alexa+-compatible MCP | `app/mcp/server.py` — Streamable HTTP, spec 2025-11-25 |
+| Command screen | `apps/web/app/sentinel/page.tsx` |
 
-## New components to build (P01+)
+State is **in-process** (no database); the authority semantics — deterministic policy,
+roles, expiry, exactly-once, append-only audit — are fully enforced in the services above.
 
-1. **Ring Event Intake** (`app/providers/ring/` or `app/ring/`) — OAuth 2.0,
-   webhook receiver with **HMAC-SHA256 signature verification**, event
-   normalization, snapshot retrieval, and a **simulator/replay source** that emits
-   the 23:42 burst deterministically. Honest integration status like the sponsor
-   adapters.
-2. **Incident Engine** (`app/orchestration/incident_workflow.py` +
-   `app/services/incident_service.py`) — correlate an event burst into one
-   incident; drive the lifecycle; reuse governance/approval/audit.
-3. **Bedrock Perception** (`app/providers/llm/bedrock.py` for reasoning +
-   `app/perception/` for snapshot→structured-observation) — behind the existing
-   provider abstraction with a deterministic local fallback (so `make test` and
-   the no-key demo never call AWS). Uses boto3 `bedrock-runtime`.
-4. **Context Engine** (`app/services/context_service.py`) — business hours,
-   expected visitors, access requests, credentials → context dict for the engine.
-5. **Situational risk** — deterministic; either inside the extended
-   `governance/engine.py` or a small `app/governance/incident_risk.py`.
-6. **Governed Action Executor** — new tools + an **idempotency guard** for
-   exactly-once action delivery (the base has approval-idempotency but no general
-   action idempotency table yet).
-7. **Alexa+ MCP server** (`app/mcp/` or a sibling app) — self-hosted **Streamable
-   HTTP** MCP (spec 2025-11-25+): `list_open_incidents`, `get_incident`,
-   `approve_action`, `deny_action`. Mutations route through `approval_service` —
-   the MCP cannot bypass authority.
-8. **Sentinel console** (`apps/web`) — reskin the live dashboard to a
-   **security-officer shift** view (incident timeline, on-duty status, the
-   winner-moment chain, approve/deny). Reuse `Timeline`, `ApprovalPanel`,
-   `MetricsRail`, the SSE client.
+## Decision branches (deterministic policy engine)
 
-## Decision branches (from `governance/engine.py`, already implemented)
-
-- `BLOCK` → incident denied/blocked, recorded, terminal.
-- `APPROVAL_REQUIRED` → open approval (by role) → pause via coordinator → resume
-  exactly once on approve; reject → stop safely.
-- `ALLOW` → act now.
+- `DENY` → action denied and recorded; `grant_temporary_access` is DENY unless every
+  precondition holds (business hours ∧ verified visitor ∧ approved request ∧ credential).
+- `REQUIRE_APPROVAL` → open a role-scoped, expiring approval → execute **exactly once** on a
+  valid approval; reject stops safely.
+- `ALLOW` → execute now (exactly once).
 
 ## Security concerns (Sentinel-specific)
 
 - **Webhook authenticity:** verify Ring HMAC-SHA256 on every event; reject
   unsigned/replayed events (timestamp/nonce window).
-- **Secrets:** Ring OAuth tokens + AWS creds in env / secret store only. The
-  repo's `.env` is gitignored (verified). Operational note: the developer's local
-  `.env` currently holds live sponsor keys — keep it out of git and CI.
+- **Secrets:** Ring OAuth tokens + AWS creds in env / secret store only. The repo's
+  `.env` is gitignored; only `.env.example` is tracked.
 - **Perception cannot escalate authority:** low-confidence or absent perception
   resolves to the *more restrictive* branch, never auto-allow (design rule for the
   risk step).
@@ -126,32 +96,17 @@ flowchart TB
 - Entrance monitoring implies notice/consent obligations — call out in product
   docs; out of scope to enforce technically in the hackathon.
 
-## Architectural conflicts to resolve (flagged, not yet fixed)
+## Deployment
 
-1. **Governance engine is scenario-hardcoded**, not a general condition engine.
-   Extend `evaluate()` with deterministic entrance scenarios (grant/warn/notify)
-   mapping to the winner moment. Keep it a pure function. *(Modification, disclosed
-   as new work.)*
-2. **Domain vocabulary is mission/workforce-shaped.** Introduce **SecurityIncident
-   as the governed unit.** Two options: (a) add `security_incidents` tables and
-   give `events`/`approvals`/`governance_decisions` a nullable `incident_id`
-   (Alembic migration; parallel to `mission_id`); or (b) model each incident as a
-   `Mission` row (zero schema churn, some semantic stretch). **Recommend (a)** for
-   clarity; decide in P01.
-3. **No general exactly-once action mechanism.** The base has approval-idempotency
-   and a single post-approval deploy, but no action idempotency table. Add one for
-   the Governed Action Executor. *(New, small.)*
-4. **Cloud story.** Web on Vercel, API on Render (no database). Sentinel's
-   brain is **Bedrock (AWS)** via boto3 — Render can call Bedrock with AWS creds,
-   so **no hosting move is required** (cleaner AWS-Builder story than a full GCP
-   stack). Optionally deploy the API on AWS later. **Owner decision; default: keep
-   Render/Vercel + Bedrock via boto3.**
+Web on Vercel, API on Render — **no database**. Sentinel's perception brain is
+**Amazon Bedrock** via boto3; Render (or any host) calls Bedrock with AWS creds, so
+no additional infrastructure is required. With no keys, Ring uses the Playground
+simulator and Bedrock falls back to a deterministic Mock.
 
-## Architectural debt found: NONE that violates the invariant
+## Invariant upheld
 
-Verified in P00: **no LLM is in the authorization path.** `AgentRunner` documents
-and enforces that it makes no governance decision; `workflow._evaluate_and_record`
-calls the deterministic `GovernanceEngine.evaluate` and persists/emits the result;
-the LLM's `tool_requests` are inputs to that gate, never the decision. Preserve
-this contract when adding Bedrock: it feeds **observations into context** and
-**prose into explanations**, never a decision.
+**No LLM is in the authorization path.** Perception output is rejected if it carries
+any authority field (`app/sentinel/perception/parse.py`); the decision is produced
+solely by the deterministic risk + policy engines (`app/sentinel/governance/`); the AI
+recommendation only selects which action to evaluate, never the outcome. Bedrock feeds
+**observations into context** and **prose into explanations** — never a decision.

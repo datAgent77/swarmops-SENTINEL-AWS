@@ -70,17 +70,6 @@ suggested improvement · status**.
 - **Suggested improvement:** A minimal reference "Streamable-HTTP-only" server example.
 - **Status:** Resolved.
 
-### 2026-09-04 · build · Test suite vs a populated local `.env`
-- **Task:** Run the suite locally.
-- **Steps:** `make test` with a developer `.env` holding sponsor keys.
-- **Expected:** Green.
-- **Actual:** ~10 mission tests assert key-absence behavior; pydantic-settings loads `.env`
-  from disk regardless of process env, so present keys fail those assertions.
-- **Severity:** Low (CI has no `.env`).
-- **Workaround:** Run with `.env` moved aside; documented in the README.
-- **Suggested improvement:** A test env-file override in conftest.
-- **Status:** Resolved (documented).
-
 ## Product-feedback checklist (per tool used, for submission)
 - [x] Ring — usability/effectiveness/onboarding captured above; rebuild likelihood: **high** once base host + signature are located.
 - [x] Bedrock — captured above; rebuild likelihood: **high** (Converse + strict JSON is clean).
