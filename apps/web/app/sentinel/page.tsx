@@ -49,16 +49,20 @@ const REASON_LABEL: Record<string, string> = {
 const TL_LABEL: Record<string, (t: TimelineItem) => string> = {
   incident_created: () => "Incident opened from correlated entrance events",
   observation_generated: () => "AI observation generated",
-  risk_calculated: (t) => `Risk assessed ${t.decision ?? "HIGH"}`,
-  policy_evaluated: () => "Security policy evaluated",
-  action_proposed: (t) => (t.reason === "GRANT_TEMPORARY_ACCESS" ? "Temporary access proposed" : "Warning proposed"),
+  risk_calculated: (t) => `Risk assessed ${t.decision ?? "CRITICAL"}`,
+  policy_evaluated: (t) => (t.reason === "GRANT_TEMPORARY_ACCESS" ? "Access policy evaluated" : "Warning policy evaluated"),
+  action_proposed: (t) => (t.reason === "GRANT_TEMPORARY_ACCESS" ? "AI proposed temporary access" : "AI proposed to send a warning"),
   action_denied: () => "ACCESS DENIED BY SECURITY POLICY",
   approval_requested: () => "Human approval required for warning",
-  approval_granted: () => "Warning approved by security officer",
+  approval_granted: () => "Human approval granted",
   execution_started: () => "Warning execution started",
-  execution_completed: () => "Warning executed",
-  duplicate_execution_prevented: () => "Duplicate blocked — executed exactly once",
+  execution_completed: () => "Warning executed successfully",
+  duplicate_execution_prevented: () => "Duplicate blocked — no second warning sent",
 };
+
+// Events after the human approval advance to 23:48 (deterministic scene timing).
+const TL_LATE = new Set(["approval_granted", "execution_started", "execution_completed", "duplicate_execution_prevented"]);
+const tlTime = (action: string): string => (TL_LATE.has(action) ? "23:48" : "23:47");
 
 function providerColor(status: string): string {
   if (["CONNECTED", "ACTIVE", "READY"].includes(status)) return C.green;
@@ -72,6 +76,7 @@ export default function SentinelPage() {
   const [demo, setDemo] = useState<Demo | null>(null);
   const [approval, setApproval] = useState<"idle" | "pending" | "approved" | "rejected">("idle");
   const [duplicate, setDuplicate] = useState<boolean | null>(null);
+  const [execId, setExecId] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("Press START DEMO to begin the guarded entrance scenario.");
@@ -93,6 +98,7 @@ export default function SentinelPage() {
   const start = async () => {
     setBusy(true);
     setDuplicate(null);
+    setExecId(null);
     const { ok, data } = await call("/api/sentinel/demo/start", {});
     if (ok) {
       const d = data as Demo;
@@ -113,6 +119,7 @@ export default function SentinelPage() {
     setTimeline([]);
     setApproval("idle");
     setDuplicate(null);
+    setExecId(null);
     setNote("Demo reset. Press START DEMO to begin again.");
     await loadStatus();
     setBusy(false);
@@ -128,6 +135,7 @@ export default function SentinelPage() {
     });
     if (ok) {
       setApproval(kind === "approve" ? "approved" : "rejected");
+      if (kind === "approve") setExecId((data as { execution_id?: string }).execution_id ?? null);
       setNote(kind === "approve" ? "Warning executed exactly once. Try replaying the same request." : "Warning rejected. No action taken.");
     } else {
       setNote(`Blocked by SwarmOps: ${(data as { error?: { code?: string } })?.error?.code ?? "denied"}`);
@@ -289,23 +297,26 @@ export default function SentinelPage() {
               <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 {approval === "pending" && (
                   <>
-                    <span style={{ color: C.dim, fontSize: 13 }}>Review action (as security officer):</span>
+                    <span style={{ color: C.dim, fontSize: 13 }}>Review proposed security action:</span>
                     <button onClick={() => decide("approve")} disabled={busy} style={primaryBtn(C.green, busy)}>APPROVE</button>
                     <button onClick={() => decide("reject")} disabled={busy} style={dangerBtn(busy)}>REJECT</button>
                   </>
                 )}
                 {approval === "approved" && (
                   <>
-                    <span style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(52,211,153,0.15)", border: `1px solid ${C.green}` }}>
-                      <span style={{ color: C.green, fontWeight: 800 }}>✓ WARNING SENT</span>
-                      <span style={{ display: "block", fontSize: 11, color: C.dim, marginTop: 2 }}>Executed exactly once · audit event recorded</span>
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 16px",
+                      borderRadius: 10, background: "rgba(52,211,153,0.10)", border: `1px solid ${C.green}`, minWidth: 260 }}>
+                      <Check title="WARNING APPROVED" sub="Approved by Security Officer" />
+                      <Check title="ACTION EXECUTED" sub="Warning dispatched" />
+                      <Check title="EXACTLY ONCE" sub={`Execution ID: ${execId ?? "—"}`} />
+                      <Check title="AUDIT RECORDED" sub="Immutable incident timeline" />
+                    </div>
                     <button onClick={replay} disabled={busy} style={ghostBtn(busy)}>Replay the exact same request</button>
                     {duplicate === true && (
-                      <span style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(251,191,36,0.15)", border: `1px solid ${C.amber}` }}>
-                        <span style={{ color: C.amber, fontWeight: 800 }}>🛡 DUPLICATE BLOCKED</span>
-                        <span style={{ display: "block", fontSize: 11, color: C.dim, marginTop: 2 }}>Previous execution detected.</span>
-                      </span>
+                      <div style={{ padding: "12px 16px", borderRadius: 10, background: "rgba(251,191,36,0.12)", border: `1px solid ${C.amber}`, minWidth: 260 }}>
+                        <div style={{ color: C.amber, fontWeight: 800, fontSize: 15 }}>🛡 DUPLICATE EXECUTION BLOCKED</div>
+                        <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>Existing execution detected — no second warning sent.</div>
+                      </div>
                     )}
                   </>
                 )}
@@ -327,7 +338,7 @@ export default function SentinelPage() {
                   .map((t, i) => (
                     <TL
                       key={`t${i}`}
-                      t="23:47"
+                      t={tlTime(t.action)}
                       label={TL_LABEL[t.action](t)}
                       tone={t.action === "action_denied" ? C.red : t.action === "duplicate_execution_prevented" ? C.amber : C.teal}
                     />
@@ -403,6 +414,16 @@ function Fact({ k, v, tone }: { k: string; v: string; tone: string }) {
     <div style={{ background: "#0d1526", border: `1px solid ${C.edge}`, borderRadius: 8, padding: "10px 12px" }}>
       <div style={{ fontSize: 11, letterSpacing: 1, color: C.dim }}>{k}</div>
       <div style={{ fontWeight: 800, color: tone, marginTop: 4 }}>{v}</div>
+    </div>
+  );
+}
+
+function Check({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+      <span style={{ color: C.green, fontWeight: 800 }}>✓</span>
+      <span style={{ fontWeight: 800, color: C.text, fontSize: 13, letterSpacing: 0.3 }}>{title}</span>
+      <span style={{ fontSize: 11, color: C.dim }}>{sub}</span>
     </div>
   );
 }

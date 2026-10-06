@@ -271,7 +271,7 @@ class OfficerService:
         r.action_key[action.action_id] = idem_key
 
         self._audit(r, action="policy_evaluated", actor_id=actor_id, actor_type=AuditActorType.HUMAN,
-                    decision=decision.decision.value,
+                    decision=decision.decision.value, reason=action_type.value,
                     metadata=self._policy_meta(decision, action.action_id, idem_key))
         self._audit(r, action="action_proposed", actor_id=actor_id, actor_type=AuditActorType.HUMAN,
                     reason=action_type.value, metadata={"action_id": action.action_id,
