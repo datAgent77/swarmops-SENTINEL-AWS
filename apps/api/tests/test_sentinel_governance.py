@@ -44,11 +44,12 @@ def _fully_open_ctx() -> BuildingContext:
 
 # --- risk factors + bounds ----------------------------------------------------
 
-def test_all_positive_factors_max_out_at_critical():
+def test_winner_scene_risk_is_calibrated_critical():
     obs = _obs(prolonged_presence=True, repeated_activity=True)
     risk = assess_entrance_risk(obs, _closed_scene_ctx(), NOW)
-    # 25+20+15+15+15+10 = 100
-    assert risk.risk_score == 100
+    # 25+18+14+12+10+8 = 87 (deterministic; strongly CRITICAL, not a round 100)
+    assert risk.risk_score == 87
+    assert 0 <= risk.risk_score <= 100
     assert risk.risk_level is RiskLevel.CRITICAL
     for code in ("BUILDING_CLOSED", "NO_EXPECTED_VISITOR", "REPEATED_HUMAN_ACTIVITY",
                  "PROLONGED_ENTRANCE_ACTIVITY", "NO_APPROVED_ACCESS_REQUEST", "NO_VALID_CREDENTIAL"):

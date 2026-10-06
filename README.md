@@ -32,7 +32,7 @@ Open **`/sentinel`**, press **START DEMO** — a scripted-but-real 23:42 entranc
                   verified and ingested through the production pipeline)
        BEDROCK    perception → { person_present, prolonged, repeated, confidence } (no authority)
        CONTEXT    building_open=false · expected_visitor=none · access_request=none · credential=none
-       RISK       CRITICAL (100/100) — deterministic, no LLM
+       RISK       CRITICAL (87/100) — deterministic, no LLM
 
   AI  recommends:  GRANT TEMPORARY ACCESS
   SwarmOps:        DENIED  →  Outside business hours · No verified visitor ·

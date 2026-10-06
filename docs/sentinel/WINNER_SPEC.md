@@ -32,7 +32,7 @@ Scene: **SaitALCorp office entrance, 23:42, building CLOSED.**
                                      package: false, confidence: 0.91 }
        CONTEXT        building_open=false · expected_visitor=none ·
                       approved_access_request=none · valid_credential=none
-       RISK (det.)    situational risk = HIGH   (deterministic, no LLM)
+       RISK (det.)    situational risk = 87/100 CRITICAL   (deterministic, no LLM)
 
   AI  recommends:     GRANT TEMPORARY ACCESS
   SwarmOps:           DENIED

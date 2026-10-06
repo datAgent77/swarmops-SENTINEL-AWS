@@ -248,9 +248,9 @@ export default function SentinelPage() {
             <section style={{ ...card(), borderColor: C.red, background: "rgba(248,113,113,0.06)" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 16, alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.blue }}>AI RECOMMENDATION</div>
+                  <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.blue }}>AI PROPOSED ACTION</div>
                   <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>GRANT TEMPORARY ACCESS</div>
-                  <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>probabilistic · advisory only</div>
+                  <div style={{ fontSize: 12, color: C.amber, marginTop: 4 }}>Untrusted recommendation · policy validation required</div>
                 </div>
                 <div style={{ fontSize: 26, color: C.dim }}>→</div>
                 <div>
@@ -277,7 +277,7 @@ export default function SentinelPage() {
             <section style={card()}>
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.blue }}>AI RECOMMENDATION</div>
+                  <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.blue }}>AI PROPOSED ACTION</div>
                   <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>SEND WARNING</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -296,13 +296,15 @@ export default function SentinelPage() {
                 )}
                 {approval === "approved" && (
                   <>
-                    <span style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(52,211,153,0.15)", border: `1px solid ${C.green}`, color: C.green, fontWeight: 800 }}>
-                      WARNING SENT — EXACTLY ONCE ✓
+                    <span style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(52,211,153,0.15)", border: `1px solid ${C.green}` }}>
+                      <span style={{ color: C.green, fontWeight: 800 }}>✓ WARNING SENT</span>
+                      <span style={{ display: "block", fontSize: 11, color: C.dim, marginTop: 2 }}>Executed exactly once · audit event recorded</span>
                     </span>
                     <button onClick={replay} disabled={busy} style={ghostBtn(busy)}>Replay the exact same request</button>
                     {duplicate === true && (
-                      <span style={{ padding: "6px 14px", borderRadius: 8, background: "rgba(251,191,36,0.15)", border: `1px solid ${C.amber}`, color: C.amber, fontWeight: 800 }}>
-                        Replay attempted → DUPLICATE BLOCKED
+                      <span style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(251,191,36,0.15)", border: `1px solid ${C.amber}` }}>
+                        <span style={{ color: C.amber, fontWeight: 800 }}>🛡 DUPLICATE BLOCKED</span>
+                        <span style={{ display: "block", fontSize: 11, color: C.dim, marginTop: 2 }}>Previous execution detected.</span>
                       </span>
                     )}
                   </>

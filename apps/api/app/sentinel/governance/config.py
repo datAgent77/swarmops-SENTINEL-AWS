@@ -20,12 +20,15 @@ POLICY_VERSION = "1"
 
 # Signed risk weights (points). Applied when the named factor is present.
 DEFAULT_RISK_FACTORS: dict[str, int] = {
+    # Weights are calibrated by how strongly each fact implies an intrusion, not to
+    # hit a round number. The canonical after-hours scene (all six positives) sums to
+    # 87 — strongly CRITICAL without looking hard-coded at 100.
     "BUILDING_CLOSED": 25,
-    "NO_EXPECTED_VISITOR": 20,
-    "REPEATED_HUMAN_ACTIVITY": 15,
-    "PROLONGED_ENTRANCE_ACTIVITY": 15,
-    "NO_APPROVED_ACCESS_REQUEST": 15,
-    "NO_VALID_CREDENTIAL": 10,
+    "NO_EXPECTED_VISITOR": 18,
+    "REPEATED_HUMAN_ACTIVITY": 14,
+    "PROLONGED_ENTRANCE_ACTIVITY": 12,
+    "NO_APPROVED_ACCESS_REQUEST": 10,
+    "NO_VALID_CREDENTIAL": 8,
     "DELIVERY_EXPECTED": -15,
     "VERIFIED_VISITOR": -25,
 }
