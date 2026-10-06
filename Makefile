@@ -10,7 +10,7 @@ DB_NAME := swarmops
 DB_TEST := swarmops_test
 DB_ROLE := swarmops
 
-.PHONY: install db-create lint test build migrate seed db-reset api web demo verify snapshot help
+.PHONY: install db-create lint test build migrate seed db-reset api web demo verify help
 
 help:
 	@echo "make install    - install backend (venv) and frontend deps"
@@ -25,7 +25,6 @@ help:
 	@echo "make web        - run the frontend dev server on :3000  (terminal 2)"
 	@echo "make db-reset   - drop, re-migrate, and re-seed the database"
 	@echo "make verify     - run the end-to-end happy-path integration test"
-	@echo "make snapshot   - write a dated BUILD.md + dist zip for submission"
 
 install:
 	cd $(API) && python3 -m venv .venv && $(ACT) && pip install -U pip && pip install -r requirements-dev.txt
@@ -67,9 +66,6 @@ web:
 demo: migrate seed
 	bash scripts/dev.sh
 
-# Dated build snapshot for hackathon submission (BUILD.md + dist/ zip).
-snapshot:
-	bash scripts/snapshot.sh
 
 db-reset:
 	cd $(API) && $(ACT) && alembic downgrade base && alembic upgrade head && python -m app.seed
