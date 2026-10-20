@@ -20,10 +20,11 @@ from app.sentinel.perception.base import PerceptionInput, PerceptionResult
 from app.sentinel.perception.parse import PerceptionSchemaError, parse_observation
 from app.sentinel.perception.prompt import SYSTEM_PROMPT, build_user_prompt
 
-# A cross-region inference profile id (e.g. "us.anthropic.claude-...") may be
-# required depending on region; this default is overridable via BEDROCK_MODEL_ID.
-DEFAULT_MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-DEFAULT_REGION = "us-east-1"
+# Bedrock requires an inference-profile id for current Claude models. The "global.*"
+# profiles route across all commercial AWS Regions, so the region is flexible.
+# Overridable via BEDROCK_MODEL_ID / BEDROCK_REGION.
+DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-5-5"
+DEFAULT_REGION = "us-west-1"
 
 
 class BedrockSecurityPerceptionProvider:

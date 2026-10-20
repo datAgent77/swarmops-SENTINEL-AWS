@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Provider: "auto" (Bedrock if configured, else deterministic Mock) | "bedrock"
     # | "mock". AWS credentials come from the standard boto3 chain (env/role).
     perception_provider: str = Field(default="auto", alias="PERCEPTION_PROVIDER")
-    bedrock_region: str = Field(default="us-east-1", alias="BEDROCK_REGION")
+    bedrock_region: str = Field(default="us-west-1", alias="BEDROCK_REGION")
     bedrock_model_id: str | None = Field(default=None, alias="BEDROCK_MODEL_ID")
     perception_timeout_ms: int = Field(default=12000, alias="PERCEPTION_TIMEOUT_MS")
     perception_min_confidence: float = Field(default=0.5, alias="PERCEPTION_MIN_CONFIDENCE")
