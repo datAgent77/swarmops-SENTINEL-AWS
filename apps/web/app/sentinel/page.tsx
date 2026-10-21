@@ -180,7 +180,11 @@ export default function SentinelPage() {
           <div>
             <div style={{ fontSize: 12, letterSpacing: 3, color: C.teal }}>SENTINEL</div>
             <h1 style={{ margin: "2px 0 0", fontSize: 26, fontWeight: 700 }}>AI Security Officer for Ring</h1>
-            <p style={{ margin: "8px 0 0", fontSize: 15, color: "#cdd8ee", maxWidth: 580, lineHeight: 1.5 }}>
+            <div style={{ margin: "6px 0 0", fontSize: 16, fontWeight: 800 }}>
+              <span style={{ color: C.teal }}>AI-powered security decisions.</span>{" "}
+              <span style={{ color: C.text }}>Human-controlled authority.</span>
+            </div>
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: "#cdd8ee", maxWidth: 580, lineHeight: 1.5 }}>
               Turns a Ring camera from a device that only <i>watches</i> into an officer that
               understands the scene, enforces security policy, and acts only with human approval.
             </p>
@@ -363,6 +367,19 @@ export default function SentinelPage() {
               </div>
             </section>
 
+            {/* Closing result — the whole story in one line */}
+            {approval === "approved" && (
+              <section style={{ ...card(), borderColor: C.green, background: "rgba(52,211,153,0.07)" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", alignItems: "stretch", gap: 10 }}>
+                  <ResultPart icon="🚨" tone={C.red} label="THREAT DETECTED" sub="After-hours entrance · risk 87" />
+                  <span style={{ alignSelf: "center", color: C.dim, fontSize: 20 }}>→</span>
+                  <ResultPart icon="🚫" tone={C.amber} label="UNSAFE ACTION DENIED" sub="AI-proposed access blocked by policy" />
+                  <span style={{ alignSelf: "center", color: C.dim, fontSize: 20 }}>→</span>
+                  <ResultPart icon="📣" tone={C.green} label="SECURITY NOTIFIED" sub="Human-approved · executed exactly once" />
+                </div>
+              </section>
+            )}
+
             {/* Timeline */}
             <section style={card()}>
               <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim, marginBottom: 10 }}>INCIDENT TIMELINE</div>
@@ -498,6 +515,17 @@ function EntranceMonitor() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ResultPart({ icon, tone, label, sub }: { icon: string; tone: string; label: string; sub: string }) {
+  return (
+    <div style={{ flex: "1 1 180px", minWidth: 180, textAlign: "center", padding: "12px 14px",
+      borderRadius: 12, border: `1px solid ${tone}`, background: "rgba(255,255,255,0.02)" }}>
+      <div style={{ fontSize: 22 }}>{icon}</div>
+      <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 0.5, color: tone, marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 12, color: C.dim, marginTop: 3, lineHeight: 1.35 }}>{sub}</div>
+    </div>
   );
 }
 
