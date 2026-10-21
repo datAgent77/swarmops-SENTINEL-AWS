@@ -19,6 +19,8 @@ SYSTEM_PROMPT = (
     "- Use EXACTLY these keys: person_present, vehicle_present, package_present, "
     "entrance_activity, prolonged_presence, repeated_activity, visibility, confidence, "
     "observation_codes, summary.\n"
+    "- Every boolean MUST be a literal JSON true or false — never the strings "
+    "\"none\", \"null\", \"unknown\" or a number; if unsure, use false.\n"
     "- Booleans are true/false; visibility is one of clear|low|dark|obstructed; "
     "confidence is 0.0-1.0; observation_codes is a subset of "
     f"{sorted(VALID_OBSERVATION_CODES)}; summary is one short factual sentence.\n"

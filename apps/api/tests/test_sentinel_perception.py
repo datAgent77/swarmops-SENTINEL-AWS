@@ -147,17 +147,29 @@ def test_golden_no_perception_output_creates_action_execution():
 # --- factory ------------------------------------------------------------------
 
 def test_factory_defaults_to_mock_without_bedrock_config():
-    prov = build_perception_provider()  # no BEDROCK_MODEL_ID in clean env
+    from app.config import Settings
+
+    # Ignore any ambient .env so this exercises the real "auto with no Bedrock
+    # config → Mock" path (defaults: perception_provider=auto, bedrock_model_id=None).
+    settings = Settings(_env_file=None)
+    prov = build_perception_provider(settings)
     assert prov.name == "mock"
 
 
 # --- API ----------------------------------------------------------------------
 
-def test_api_observe_returns_perception_without_authority():
+def test_api_observe_returns_perception_without_authority(monkeypatch):
     from fastapi.testclient import TestClient
 
+    import app.api.perception as perception_api
     from app.main import app
 
+    # Force the deterministic Mock so the test is independent of any ambient .env
+    # (a developer's live BEDROCK_* config must not change the asserted provider).
+    monkeypatch.setattr(
+        perception_api, "build_perception_provider",
+        lambda *a, **k: MockSecurityPerceptionProvider(),
+    )
     client = TestClient(app)
     resp = client.post("/api/perception/observe", json={
         "event_metadata": {"motion_type": "human"},

@@ -23,7 +23,7 @@ from app.sentinel.perception.prompt import SYSTEM_PROMPT, build_user_prompt
 # Bedrock requires an inference-profile id for current Claude models. The "global.*"
 # profiles route across all commercial AWS Regions, so the region is flexible.
 # Overridable via BEDROCK_MODEL_ID / BEDROCK_REGION.
-DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-5-5"
+DEFAULT_MODEL_ID = "global.anthropic.claude-haiku-4-5-20251001-v1:0"
 DEFAULT_REGION = "us-west-1"
 
 

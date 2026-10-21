@@ -18,6 +18,31 @@ class PerceptionSchemaError(ValueError):
     """Raised when model output is malformed or contains prohibited semantics."""
 
 
+# The six non-authoritative scene booleans. Models occasionally emit stringy
+# values ("none", "null", "yes") instead of a JSON boolean; we coerce ONLY these
+# known perception fields, and ONLY conservatively: anything not clearly truthy
+# resolves to False (the more restrictive reading — perception never escalates).
+_OBSERVATION_BOOL_FIELDS = (
+    "person_present",
+    "vehicle_present",
+    "package_present",
+    "entrance_activity",
+    "prolonged_presence",
+    "repeated_activity",
+)
+_TRUE_TOKENS = {"true", "yes", "y", "1", "present", "detected"}
+
+
+def _coerce_observation_bools(obj: dict[str, Any]) -> None:
+    """In-place, conservative bool coercion for known scene fields only."""
+    for field in _OBSERVATION_BOOL_FIELDS:
+        value = obj.get(field)
+        if isinstance(value, str):
+            obj[field] = value.strip().lower() in _TRUE_TOKENS
+        elif isinstance(value, (int, float)) and not isinstance(value, bool):
+            obj[field] = value != 0
+
+
 def _extract_json_object(text: str) -> dict[str, Any]:
     text = text.strip()
     # Tolerate a fenced or prefixed reply by taking the first balanced {...} block.
@@ -44,6 +69,10 @@ def parse_observation(text: str) -> SecurityObservation:
 
     if "observation_codes" in obj and isinstance(obj["observation_codes"], list):
         obj["observation_codes"] = filter_codes(obj["observation_codes"])
+
+    # Perception-layer tolerance: coerce stringy scene booleans before validation.
+    # Authority fields are already rejected above, so this cannot relax any decision.
+    _coerce_observation_bools(obj)
 
     try:
         return SecurityObservation.model_validate(obj)
