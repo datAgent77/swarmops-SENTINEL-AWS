@@ -34,7 +34,7 @@ async function call(path: string, body?: unknown): Promise<{ ok: boolean; data: 
 
 // ---- colour tokens ---------------------------------------------------------
 const C = {
-  bg: "#0a1120", panel: "#111a2e", edge: "#1e2a44", text: "#e6ecf7", dim: "#8ea0c0",
+  bg: "#0a1120", panel: "#111a2e", edge: "#1e2a44", text: "#eef2fa", dim: "#a6b6d6",
   teal: "#2dd4bf", green: "#34d399", amber: "#fbbf24", red: "#f87171", blue: "#60a5fa",
 };
 
@@ -71,6 +71,15 @@ function providerColor(status: string): string {
   return C.dim;
 }
 
+// Honest, at-a-glance classification of each integration so a live connection,
+// a simulation, and a built-in/ready component are never mistaken for each other.
+const PROVIDER_MODE: Record<string, { label: string; color: string }> = {
+  ring: { label: "SIMULATED", color: C.amber },
+  bedrock: { label: "LIVE · AWS", color: C.green },
+  swarmops: { label: "BUILT-IN", color: C.teal },
+  alexa_mcp: { label: "READY", color: C.blue },
+};
+
 export default function SentinelPage() {
   const [status, setStatus] = useState<Status | null>(null);
   const [demo, setDemo] = useState<Demo | null>(null);
@@ -79,7 +88,7 @@ export default function SentinelPage() {
   const [execId, setExecId] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState("Press START DEMO to begin the guarded entrance scenario.");
+  const [note, setNote] = useState("Press RUN SECURITY SCENARIO to replay a real after-hours entrance incident.");
 
   const loadStatus = useCallback(async () => {
     const { ok, data } = await call("/api/sentinel/status");
@@ -120,7 +129,7 @@ export default function SentinelPage() {
     setApproval("idle");
     setDuplicate(null);
     setExecId(null);
-    setNote("Demo reset. Press START DEMO to begin again.");
+    setNote("Scenario reset. Press RUN SECURITY SCENARIO to begin again.");
     await loadStatus();
     setBusy(false);
   };
@@ -170,8 +179,12 @@ export default function SentinelPage() {
         <header style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 12, letterSpacing: 3, color: C.teal }}>SENTINEL</div>
-            <h1 style={{ margin: "2px 0 0", fontSize: 26, fontWeight: 700 }}>AI Security Officer</h1>
-            <div style={{ color: C.dim, fontSize: 13, marginTop: 4 }}>
+            <h1 style={{ margin: "2px 0 0", fontSize: 26, fontWeight: 700 }}>AI Security Officer for Ring</h1>
+            <p style={{ margin: "8px 0 0", fontSize: 15, color: "#cdd8ee", maxWidth: 580, lineHeight: 1.5 }}>
+              Turns a Ring camera from a device that only <i>watches</i> into an officer that
+              understands the scene, enforces security policy, and acts only with human approval.
+            </p>
+            <div style={{ color: C.dim, fontSize: 13, marginTop: 8 }}>
               {status?.location ?? "SaitALCorp Office"} · {status?.status ?? "ENTRANCE MONITORED"}
             </div>
           </div>
@@ -191,14 +204,20 @@ export default function SentinelPage() {
             (["ring", "bedrock", "swarmops", "alexa_mcp"] as const).map((k) => {
               const p = status.providers[k];
               const name = { ring: "RING", bedrock: "BEDROCK", swarmops: "SWARMOPS", alexa_mcp: "ALEXA+ MCP" }[k];
+              const role = { ring: "Eyes", bedrock: "Understanding", swarmops: "Authority", alexa_mcp: "Approvals" }[k];
+              const mode = PROVIDER_MODE[k];
               return (
                 <div key={k} style={{ background: C.panel, border: `1px solid ${C.edge}`, borderRadius: 10, padding: "12px 14px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim }}>{name}</span>
-                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: providerColor(p.status) }} />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim }}>{name} <span style={{ color: "#6f81a6" }}>· {role}</span></span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 10, fontWeight: 800,
+                      letterSpacing: 0.5, color: mode.color, border: `1px solid ${mode.color}`, borderRadius: 999, padding: "2px 7px" }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: mode.color }} />
+                      {mode.label}
+                    </span>
                   </div>
-                  <div style={{ fontWeight: 700, marginTop: 6, color: providerColor(p.status) }}>{p.status}</div>
-                  <div style={{ fontSize: 11, color: C.dim, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.detail}</div>
+                  <div style={{ fontWeight: 800, fontSize: 17, marginTop: 8, color: providerColor(p.status) }}>{p.status}</div>
+                  <div style={{ fontSize: 12, color: C.dim, marginTop: 3, lineHeight: 1.35 }}>{p.detail}</div>
                 </div>
               );
             })}
@@ -206,9 +225,9 @@ export default function SentinelPage() {
 
         {/* Guided demo controls */}
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 20, flexWrap: "wrap" }}>
-          <button onClick={start} disabled={busy} style={primaryBtn(C.teal, busy)}>START DEMO</button>
-          <button onClick={reset} disabled={busy} style={ghostBtn(busy)}>RESET DEMO</button>
-          <span style={{ color: C.dim, fontSize: 13 }}>{note}</span>
+          <button onClick={start} disabled={busy} style={primaryBtn(C.teal, busy)}>▶ RUN SECURITY SCENARIO</button>
+          <button onClick={reset} disabled={busy} style={ghostBtn(busy)}>RESET</button>
+          <span style={{ color: "#c3d0e8", fontSize: 13 }}>{note}</span>
         </div>
 
         {/* Pipeline */}
@@ -263,7 +282,8 @@ export default function SentinelPage() {
                 <div style={{ fontSize: 26, color: C.dim }}>→</div>
                 <div>
                   <div style={{ fontSize: 12, letterSpacing: 1.5, color: C.dim }}>SWARMOPS POLICY</div>
-                  <div style={{ fontSize: 30, fontWeight: 900, color: C.red, marginTop: 2 }}>DENIED</div>
+                  <div style={{ fontSize: 38, fontWeight: 900, color: C.red, marginTop: 2, letterSpacing: 1,
+                    textShadow: "0 0 18px rgba(248,113,113,0.45)" }}>DENIED</div>
                   <ul style={{ margin: "8px 0 0", paddingLeft: 18, color: C.text, fontSize: 13 }}>
                     {demo.centerpiece.reason_codes.map((c) => (
                       <li key={c}>{REASON_LABEL[c] ?? c}</li>
@@ -272,12 +292,22 @@ export default function SentinelPage() {
                 </div>
               </div>
               <div style={{ marginTop: 14, textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: C.text }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>
                   &ldquo;AI recommended access. Security policy stopped it.&rdquo;
                 </div>
-                <div style={{ fontSize: 11, color: C.dim, marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>
                   Deterministic decision — the AI cannot override it.
                 </div>
+              </div>
+              {/* The safe alternative Sentinel took instead — kept visually prominent */}
+              <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+                justifyContent: "center", padding: "10px 16px", borderRadius: 10,
+                background: "rgba(52,211,153,0.10)", border: `1px solid ${C.green}` }}>
+                <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, color: C.green }}>SAFE ACTION INSTEAD</span>
+                <span style={{ color: C.dim }}>→</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                  Notify the security officer (human-approved) — never open the door
+                </span>
               </div>
             </section>
 
@@ -360,12 +390,60 @@ export default function SentinelPage() {
 }
 
 // ---- small components ------------------------------------------------------
-function CameraPanel({ alert = false }: { alert?: boolean }) {
+function CameraPanel({ alert = false, time = "23:42" }: { alert?: boolean; time?: string }) {
   const accent = alert ? C.red : C.teal;
+  const clock = alert ? time : "23:30";
   return (
     <div style={{ position: "relative", borderRadius: 12, border: `1px solid ${alert ? C.red : C.edge}`,
-      background: "linear-gradient(160deg,#0c1424,#070d18)", minHeight: 150, overflow: "hidden",
-      display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 12 }}>
+      background: "#060b14", minHeight: 196, overflow: "hidden" }}>
+      {/* ---- Simulated night-entrance scene (drawn, labelled SIMULATED) ---- */}
+      <svg viewBox="0 0 320 196" preserveAspectRatio="xMidYMid slice"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0c1a33" />
+            <stop offset="1" stopColor="#060b14" />
+          </linearGradient>
+          <radialGradient id="porch" cx="50%" cy="34%" r="46%">
+            <stop offset="0" stopColor={alert ? "rgba(255,170,150,0.26)" : "rgba(150,200,255,0.20)"} />
+            <stop offset="1" stopColor="rgba(0,0,0,0)" />
+          </radialGradient>
+        </defs>
+        <rect width="320" height="196" fill="url(#sky)" />
+        {/* ground */}
+        <rect y="156" width="320" height="40" fill="#0a1120" />
+        <line x1="0" y1="156" x2="320" y2="156" stroke="#17243d" strokeWidth="1" />
+        {/* wall + door frame */}
+        <rect x="116" y="40" width="88" height="116" fill="#0e1729" stroke="#1d2c49" />
+        <rect x="128" y="52" width="64" height="104" fill="#0a1220" stroke="#1d2c49" />
+        <circle cx="184" cy="108" r="2.4" fill="#33466b" />
+        {/* porch light pool */}
+        <rect width="320" height="196" fill="url(#porch)" />
+        {/* hooded figure at the door (the after-hours subject) */}
+        <g opacity={alert ? 1 : 0.28}>
+          <ellipse cx="160" cy="156" rx="26" ry="5" fill="rgba(0,0,0,0.55)" />
+          <path d="M143 156 Q143 112 160 106 Q177 112 177 156 Z" fill="#0b111d" />
+          <circle cx="160" cy="98" r="9.5" fill="#0b111d" />
+          <path d="M150 99 Q160 86 170 99 L167 100 Q160 92 153 100 Z" fill="#111a2b" />
+        </g>
+        {/* detection box + label, only during the incident */}
+        {alert && (
+          <g>
+            <rect x="138" y="84" width="44" height="76" fill="none" stroke={C.red} strokeWidth="1.5" strokeDasharray="5 3" />
+            <rect x="138" y="74" width="60" height="11" rx="2" fill={C.red} />
+            <text x="141" y="82.5" fontSize="7.5" fontWeight="700" fill="#2a0708" fontFamily="monospace">PERSON 92%</text>
+          </g>
+        )}
+      </svg>
+
+      {/* scanlines + vignette for a CCTV feel */}
+      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none",
+        backgroundImage: "repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px)" }} />
+      {alert && (
+        <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none",
+          background: "radial-gradient(circle at 50% 42%, rgba(248,113,113,0.12), rgba(248,113,113,0.03) 58%, transparent 72%)" }} />
+      )}
+
       {/* corner brackets */}
       {[0, 1, 2, 3].map((i) => (
         <span key={i} aria-hidden style={{
@@ -375,21 +453,28 @@ function CameraPanel({ alert = false }: { alert?: boolean }) {
           borderLeft: i % 2 === 0 ? `2px solid ${accent}` : "none",
           borderRight: i % 2 === 1 ? `2px solid ${accent}` : "none",
           top: i < 2 ? 10 : "auto", bottom: i >= 2 ? 10 : "auto",
-          left: i % 2 === 0 ? 10 : "auto", right: i % 2 === 1 ? 10 : "auto", opacity: 0.8 }} />
+          left: i % 2 === 0 ? 10 : "auto", right: i % 2 === 1 ? 10 : "auto", opacity: 0.85 }} />
       ))}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 11, letterSpacing: 1.5, color: C.dim }}>FRONT ENTRANCE</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: accent }}>
+
+      {/* top overlay: camera id + REC/LIVE */}
+      <div style={{ position: "absolute", top: 12, left: 14, right: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 11, letterSpacing: 1.5, color: "#c3d0e8", textShadow: "0 1px 3px #000" }}>FRONT ENTRANCE</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 800, color: accent, textShadow: "0 1px 3px #000" }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: accent, boxShadow: `0 0 8px ${accent}` }} />
-          {alert ? "INCIDENT" : "LIVE"}
+          {alert ? "● REC · INCIDENT" : "LIVE"}
         </span>
       </div>
-      <div style={{ textAlign: "center", color: C.dim, fontSize: 12 }}>
-        {alert ? "person detected · low light" : "no motion"}
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.dim, fontVariantNumeric: "tabular-nums" }}>
-        <span>ring-front-door</span>
-        <span>simulator</span>
+
+      {/* bottom overlay: SIMULATED FEED label + camera id + timestamp */}
+      <div style={{ position: "absolute", bottom: 10, left: 14, right: 14,
+        display: "flex", justifyContent: "space-between", alignItems: "flex-end", fontVariantNumeric: "tabular-nums" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10, fontWeight: 800, letterSpacing: 0.5,
+          color: "#0a1120", background: "rgba(166,182,214,0.9)", borderRadius: 4, padding: "2px 7px" }}>
+          ◉ SIMULATED FEED
+        </span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#dce5f5", textShadow: "0 1px 3px #000" }}>
+          {clock} {alert && <span style={{ color: C.amber }}>· LOW LIGHT</span>}
+        </span>
       </div>
     </div>
   );
@@ -408,7 +493,7 @@ function EntranceMonitor() {
           <div style={{ fontSize: 22, fontWeight: 800 }}>No active incident</div>
           <div style={{ fontSize: 13, color: C.dim }}>
             Ring feed connected (simulator). Bedrock, SwarmOps policy, and human approval are on standby.
-            Press <b style={{ color: C.teal }}>START DEMO</b> to replay a real after-hours entrance incident.
+            Press <b style={{ color: C.teal }}>RUN SECURITY SCENARIO</b> to replay a real after-hours entrance incident.
           </div>
         </div>
       </div>
@@ -457,13 +542,18 @@ function Pipeline({ stage }: { stage: number }) {
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: 8, marginTop: 20, overflowX: "auto" }}>
       {STAGES.map((s, i) => {
-        const active = i < stage;
+        const done = i < stage;
+        const current = stage > 0 && i === stage; // the step awaiting attention right now
+        const accent = done ? C.teal : current ? C.amber : C.edge;
+        const labelColor = done ? C.teal : current ? C.amber : C.text;
         return (
           <div key={s.top} style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 150 }}>
             <div style={{ flex: 1, textAlign: "center", padding: "12px 8px", borderRadius: 10,
-              border: `1px solid ${active ? C.teal : C.edge}`,
-              background: active ? "rgba(45,212,191,0.10)" : C.panel }}>
-              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, color: active ? C.teal : C.text }}>{s.top}</div>
+              border: `1px solid ${accent}`,
+              background: done ? "rgba(45,212,191,0.10)" : current ? "rgba(251,191,36,0.10)" : C.panel }}>
+              <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, color: labelColor }}>
+                {done ? "✓ " : current ? "● " : ""}{s.top}
+              </div>
               <div style={{ fontSize: 10, color: C.dim, marginTop: 3 }}>{s.bot}</div>
             </div>
             {i < STAGES.length - 1 && <span style={{ color: C.dim }}>→</span>}
