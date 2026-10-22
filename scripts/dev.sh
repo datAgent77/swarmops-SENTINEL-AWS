@@ -34,5 +34,5 @@ WEB_PID=$!
 
 echo ""
 echo "Sentinel is running:  API → http://localhost:8000   UI → http://localhost:3000/sentinel"
-echo "Open http://localhost:3000/sentinel and press 'START DEMO'.  Press Ctrl-C to stop."
+echo "Open http://localhost:3000/sentinel and press 'RUN SECURITY SCENARIO'.  Press Ctrl-C to stop."
 wait

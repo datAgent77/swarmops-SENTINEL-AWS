@@ -33,9 +33,10 @@ deterministic; no LLM may authorize its own action.**
 - **Sensing — Ring Partner API** (`api.amazonvision.com`): HMAC-SHA256 `X-Signature`
   webhooks, documented `{meta,data}` payloads, and the Ring **Playground simulator** for
   events without a device. Verify → normalize → dedupe (`meta.request_id`) → correlate.
-- **Intelligence — Amazon Bedrock** (`bedrock-runtime` Converse): snapshot + metadata →
+- **Intelligence — Amazon Bedrock** (`bedrock-runtime` Converse): event metadata + scene text →
   strict-JSON `SecurityObservation`; authority-shaped output is rejected; failures degrade
-  to a safe `UNKNOWN`.
+  to a safe `UNKNOWN`. (The guided demo uses a fixed, deterministic observation; the live
+  Bedrock call is `POST /api/perception/observe`. Image/snapshot vision is a documented follow-up.)
 - **Authority — SwarmOps**: typed, versioned risk + policy engines (`policy_hash`), no LLM,
   no `eval`. Role-scoped, expiring approvals; idempotency- and concurrency-guarded,
   exactly-once execution.

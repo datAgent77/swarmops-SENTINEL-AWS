@@ -41,20 +41,20 @@ shell, generic command, raw DB, or policy-mutation tool.
 ## Local development
 
 ```bash
-make dev            # API on :8080 (or run uvicorn app.main:app)
+make dev            # API on :8000 (or run uvicorn app.main:app)
 # initialize
-curl -s localhost:8080/mcp -H 'content-type: application/json' \
+curl -s localhost:8000/mcp -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize"}'
 # list tools
-curl -s localhost:8080/mcp -H 'content-type: application/json' \
+curl -s localhost:8000/mcp -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
 # call a tool
-curl -s localhost:8080/mcp -H 'content-type: application/json' \
+curl -s localhost:8000/mcp -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_incident_explanation","arguments":{"incident_id":"inc-demo"}}}'
 ```
 
 For a public dev URL (Alexa+ needs remote reachability): tunnel with `ngrok http
-8080` or `cloudflared`, and register the resulting `https://…/mcp` URL. Never put
+8000` or `cloudflared`, and register the resulting `https://…/mcp` URL. Never put
 secrets in the URL.
 
 ## Deployment

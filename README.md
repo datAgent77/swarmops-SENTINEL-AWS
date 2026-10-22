@@ -26,6 +26,8 @@ Built for the **Build, Ship, Shape: Amazon Developer Hackathon** (Ring track + A
 ## ⏱️ 60-second test (for judges)
 
 **No keys, no database, no device** — the full guided demo runs locally out of the box.
+One-time setup (`make install`) takes a few minutes for the Python + Node deps; the guided
+**scenario itself then runs in about a minute** end to end.
 
 ```bash
 git clone https://github.com/datAgent77/swarmops-SENTINEL-AWS
@@ -63,13 +65,21 @@ Open **`/sentinel`**, press **RUN SECURITY SCENARIO** — a scripted-but-real 23
   AI  recommends:  SEND WARNING
   SwarmOps:        HUMAN APPROVAL REQUIRED (role: security)
        HUMAN       approves (web console or an Alexa+-compatible MCP client)
-       EXECUTOR    warning delivered — EXACTLY ONCE
+       EXECUTOR    warning action executed (demo provider — no external alert) — EXACTLY ONCE
        REPLAY      same request again → DUPLICATE BLOCKED (one execution only)
        AUDIT       full chain recorded, append-only
 ```
 
 The differentiator is not the AI — it is the **restraint**: an AI that recommends an action and is
 **denied by a rule it cannot override**, with a human in the loop for the rest.
+
+> **What's real vs. simulated in this run.** Ring events are the **Playground simulator**
+> (locally HMAC-signed) run through the real verify→normalize→correlate pipeline. The guided
+> demo's perception is a **fixed, deterministic observation** so runs are reproducible with no
+> keys; a **live Amazon Bedrock** Converse call is demonstrated separately via
+> `POST /api/perception/observe` (metadata + scene text). **Exactly-once** is an **in-process**
+> guarantee (idempotency key + a serializing lock). `SEND_WARNING` runs through a demo action
+> provider — it records the action and audits it, but delivers **no external notification**.
 
 ## Architecture
 
@@ -79,7 +89,7 @@ flowchart TB
     subgraph SENTINEL["Sentinel"]
       INTAKE["Event Intake<br/>HMAC-SHA256 verify · dedupe"]
       INC["Incident Engine<br/>correlate events → one incident"]
-      PERC["Bedrock Perception<br/>snapshot+meta → structured observation"]
+      PERC["Bedrock Perception<br/>event meta + scene text → structured observation"]
       CTX["Context Engine<br/>hours · visitors · access reqs · credentials"]
       subgraph AUTH["SwarmOps — deterministic authority"]
         RISK["Risk Engine<br/>situational score + severity"]
@@ -178,7 +188,8 @@ guided demo that completes deterministically across consecutive runs.
   constant-time; unsigned/tampered bodies are rejected (401) and never processed.
 - **Role-based, expiring approvals**; the approver's role is resolved server-side (never
   claimable), the proposer cannot self-approve, and no request field can skip approval.
-- **Exactly-once execution** under retries and concurrent approvals; append-only audit.
+- **Exactly-once execution** under retries and concurrent approvals — an **in-process**
+  guarantee (idempotency key + a serializing lock, single process); append-only audit.
 - **No secrets in the repo** (`.env` gitignored; only `.env.example` is tracked); provider
   status is truthful (no false "connected").
 
@@ -196,6 +207,14 @@ record (only a structured observation + a SHA-256 of the raw payload is kept). F
   not expose it; `GRANT_TEMPORARY_ACCESS` stays a governed, default-denied recommendation.
 - Live Ring events need partner credentials; the keyless demo uses the documented Playground
   simulator. Live Bedrock needs AWS creds + a model id; otherwise a deterministic Mock runs.
+- **Perception input is event metadata + scene text.** The Bedrock provider also accepts an
+  image frame (`image_bytes`), but passing a real Ring **snapshot to Bedrock vision is not yet
+  wired** through the API or the guided demo (a documented follow-up). The guided `/sentinel`
+  demo uses a fixed, deterministic observation; a live Bedrock call is exercised via
+  `POST /api/perception/observe`.
+- **`SEND_WARNING` delivery is simulated** (demo action provider): the action is executed,
+  recorded, and audited exactly once, but **no external notification** (email/SMS/push) is sent
+  in the hackathon build.
 - The officer/incident state is **in-process by design** (no database); durable persistence is an
   optional follow-up. The authority semantics (deterministic policy, roles, expiry, exactly-once,
   audit) are fully enforced.

@@ -48,10 +48,17 @@ curl -s -X POST localhost:8000/api/ring/simulate \
 ## 2) Amazon Bedrock (AWS Builder mini)
 
 **Official technology used** — **Amazon Bedrock Runtime** via the boto3 `Converse` API,
-used as the **perception** layer that turns a Ring snapshot + event metadata into a
-strict-JSON `SecurityObservation`. No agent framework (AgentCore/Strands) is used — P00
-found no genuine need, and moving policy into an agent runtime would violate the core
-invariant. **We do not claim any AWS service we don't call.**
+used as the **perception** layer that turns Ring **event metadata + scene text** into a
+strict-JSON `SecurityObservation`. (The provider also accepts an image frame for future
+snapshot vision, but that path is **not yet wired** through the API or the guided demo.)
+No agent framework (AgentCore/Strands) is used — P00 found no genuine need, and moving
+policy into an agent runtime would violate the core invariant. **We do not claim any AWS
+service we don't call.**
+
+**Live vs. demo** — the guided `/sentinel` demo uses a **fixed, deterministic observation**
+(`build_winner_scene`) so runs are reproducible with no keys and no network. The **live**
+Bedrock Converse call is the `POST /api/perception/observe` path below; it returns `bedrock`
+provider telemetry when `BEDROCK_MODEL_ID` + AWS creds are present, else the Mock perceiver.
 
 **Where in code**
 - `app/sentinel/perception/bedrock.py` — `boto3.client("bedrock-runtime").converse(...)`, strict-JSON parse, telemetry.
