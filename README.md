@@ -23,9 +23,31 @@ Built for the **Build, Ship, Shape: Amazon Developer Hackathon** (Ring track + A
 "SwarmOps" is the name of Sentinel's deterministic-governance layer — see
 [Provenance](#provenance-honest-disclosure).
 
+## ⏱️ 60-second test (for judges)
+
+**No keys, no database, no device** — the full guided demo runs locally out of the box.
+
+```bash
+git clone https://github.com/datAgent77/swarmops-SENTINEL-AWS
+cd swarmops-SENTINEL-AWS
+make install      # Python 3.11 + Node 20 deps
+make dev          # FastAPI :8000 + Next.js :3000 (Ctrl-C stops both)
+```
+
+Open **http://localhost:3000/sentinel**, then:
+
+1. **RUN SECURITY SCENARIO** → an after-hours incident: Bedrock perception, **RISK 87 / CRITICAL**.
+2. The AI recommends **GRANT ACCESS** → the policy returns **DENIED** — a rule the AI cannot override.
+3. **APPROVE** the *Send Warning* action → executes **EXACTLY ONCE**, on an append-only audit trail.
+4. **Replay the exact same request** → **DUPLICATE BLOCKED**.
+
+**Live Amazon Bedrock (optional):** `aws configure`, set
+`BEDROCK_MODEL_ID=global.anthropic.claude-haiku-4-5` in `apps/api/.env`, restart — the
+**BEDROCK** chip turns **CONNECTED**. Run the test suite with `make test` (~134 pass, no keys needed).
+
 ## The winner moment
 
-Open **`/sentinel`**, press **START DEMO** — a scripted-but-real 23:42 entrance incident:
+Open **`/sentinel`**, press **RUN SECURITY SCENARIO** — a scripted-but-real 23:42 entrance incident:
 
 ```
 23:42  RING       motion ×3 at a closed entrance (HMAC-signed Ring Playground events,
@@ -93,8 +115,8 @@ Full detail: [`docs/sentinel/`](docs/sentinel/) — `WINNER_SPEC`, `PRODUCT_SPEC
 **`/sentinel`** is the AI-Security-Officer command center (not a generic dashboard):
 **ON DUTY** status, live **RING / BEDROCK / SWARMOPS / ALEXA+ MCP** provider indicators, the incident
 card, the officer pipeline (OBSERVE → UNDERSTAND → ASSESS+AUTHORIZE → APPROVE → EXECUTE), the
-**DENIED** centerpiece, the human-approval flow, and the incident timeline. **START DEMO** and
-**RESET DEMO** drive real backend endpoints — the frontend never fakes results.
+**DENIED** centerpiece, the human-approval flow, and the incident timeline. **RUN SECURITY SCENARIO** and
+**RESET** drive real backend endpoints — the frontend never fakes results.
 
 ## Quick start
 
@@ -106,7 +128,7 @@ make web          # terminal 2 → Next.js on http://localhost:3000
 # or: make dev    # runs both together (Ctrl-C stops both)
 ```
 
-Then open **http://localhost:3000/sentinel** and press **START DEMO**. No API keys are required —
+Then open **http://localhost:3000/sentinel** and press **RUN SECURITY SCENARIO**. No API keys are required —
 Ring runs on the documented Playground simulator and Bedrock perception on a deterministic Mock.
 
 ## Providers & configuration
